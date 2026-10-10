@@ -2,7 +2,10 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+import hmac
+import os
+
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from api import store
@@ -90,7 +93,13 @@ async def export_plan(plan_id: str, format: str = "csv"):
 
 
 @router.put("/{plan_id}/status")
-async def set_status(plan_id: str, body: StatusBody):
+async def set_status(plan_id: str, body: StatusBody,
+                     x_officer_token: Optional[str] = Header(None)):
+    # When OFFICER_TOKEN is configured (the AWS deployment), changing a plan's status
+    # requires it; local development without the variable stays open.
+    expected = os.environ.get("OFFICER_TOKEN")
+    if expected and not hmac.compare_digest(x_officer_token or "", expected):
+        raise HTTPException(401, "officer token required to change plan status")
     try:
         return store.set_plan_status(plan_id, body.status, body.actor, body.note)
     except KeyError:

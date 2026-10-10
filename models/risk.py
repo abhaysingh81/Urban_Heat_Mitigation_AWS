@@ -25,7 +25,7 @@ import pandas as pd
 
 from pipeline.config import (
     CITIES, city_cooling_spots_file, city_processed_dir, city_real_features_file,
-    is_real_city,
+    is_real_city, load_city_mask, data_version,
 )
 
 # City-level alert level from the forecast, on two separate scales (never mixed):
@@ -47,8 +47,7 @@ def pct(s: pd.Series) -> pd.Series:
 
 
 def _file_key(city_id: str):
-    f = city_real_features_file(city_id)
-    return (city_id, f.stat().st_mtime if f.exists() else 0)
+    return data_version(city_id)
 
 
 @lru_cache(maxsize=8)
@@ -58,6 +57,9 @@ def _load(key) -> pd.DataFrame:
     if not f.exists():
         raise FileNotFoundError(f"No real-data features for '{city_id}'")
     df = pd.read_parquet(f)
+    mask = load_city_mask(city_id)  # keep only cells inside the city's administrative boundary
+    if mask:
+        df = df[df["grid_id"].isin(mask["inside"])].reset_index(drop=True)
     pred_f = city_processed_dir(city_id) / "predictions_real.parquet"
     if pred_f.exists():
         df = df.merge(pd.read_parquet(pred_f), on="grid_id", how="left")

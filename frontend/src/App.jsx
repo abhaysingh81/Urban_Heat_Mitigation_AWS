@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
-import { Map, BarChart2, Layers, ChevronDown, Sun, Moon, Info, PanelLeftClose, PanelLeftOpen, ShieldAlert, ClipboardList, FileText, Smartphone, Languages } from 'lucide-react';
+import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
+import { Map, BarChart2, Layers, ChevronDown, Sun, Moon, Info, PanelLeftClose, PanelLeftOpen, ClipboardList, FileText, Smartphone, Languages } from 'lucide-react';
 import './App.css';
 import './pages/Decision.css';
 import { API_BASE } from './api';
@@ -13,8 +13,8 @@ import Onboarding from './components/Onboarding';
 import MapView from './pages/MapView';
 import DriversView from './pages/DriversView';
 import ScenarioView from './pages/ScenarioView';
-import RiskView from './pages/RiskView';
-import PlanView from './pages/PlanView';
+import ScenarioLab from './pages/ScenarioLab';
+import WardPlanner from './pages/WardPlanner';
 import ModelCardView from './pages/ModelCardView';
 import CitizenView from './pages/CitizenView';
 
@@ -124,14 +124,9 @@ function App() {
             <span>{t('nav_scenarios')}</span>
           </NavLink>
 
-          <NavLink to="/risk" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
-            <ShieldAlert size={20} />
-            <span>{t('nav_risk')}</span>
-          </NavLink>
-
-          <NavLink to="/plan" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+          <NavLink to="/planner" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <ClipboardList size={20} />
-            <span>{t('nav_plan')}</span>
+            <span>{t('nav_planner')}</span>
           </NavLink>
 
           <NavLink to="/model" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
@@ -199,9 +194,12 @@ function App() {
           <Routes>
             <Route path="/" element={<MapView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
             <Route path="/drivers" element={<DriversView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
-            <Route path="/scenarios" element={<ScenarioView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
-            <Route path="/risk" element={<RiskView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
-            <Route path="/plan" element={<PlanView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
+            <Route path="/scenarios" element={activeCity?.data_kind === 'real'
+              ? <ScenarioLab key={selectedCity} city={selectedCity} cityInfo={activeCity} />
+              : <ScenarioView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
+            <Route path="/planner" element={<WardPlanner key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
+            <Route path="/risk" element={<Navigate to={`/planner${location.search}`} replace />} />
+            <Route path="/plan" element={<Navigate to={`/planner${location.search}`} replace />} />
             <Route path="/model" element={<ModelCardView />} />
           </Routes>
         )}

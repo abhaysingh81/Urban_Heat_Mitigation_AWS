@@ -19,3 +19,7 @@ Notes
 - Open-Meteo's free tier is for non-commercial use; a commercial deployment needs their paid API.
 - General heat-health guidance in `agent/guidance/` is paraphrased, not quoted, from public advice; it is not an official NDMA text.
 - Cooling-effect ranges in `pipeline/config.py` (`REAL_INTERVENTIONS`) and cost figures are planning-grade placeholders; cite and replace with local studies/quotes before real use.
+
+## City boundaries
+
+Administrative boundaries for New Delhi (NCT of Delhi), Mumbai (Mumbai City + Mumbai Suburban districts), Jaipur (Jaipur Municipal Corporation) and Bengaluru (city relation) come from © OpenStreetMap contributors (ODbL), fetched once via Nominatim (`pipeline/real/boundary.py`) and stored in `data/processed/<city>/boundary.geojson`.

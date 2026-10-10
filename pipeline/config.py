@@ -54,7 +54,7 @@ def utm_epsg_for(lon: float, lat: float) -> str:
 CITIES = {
     "new_delhi": {
         "name": "New Delhi", "state": "Delhi", "country": "India",
-        "bbox": {"west": 76.95, "south": 28.40, "east": 77.45, "north": 28.85},
+        "bbox": {"west": 76.83, "south": 28.40, "east": 77.45, "north": 28.89},
         "center": (77.20, 28.61),
         "water_axis": "lon", "water_value": 77.25,  # Yamuna river
         "coastal": False,
@@ -72,7 +72,7 @@ CITIES = {
     },
     "bengaluru": {
         "name": "Bengaluru", "state": "Karnataka", "country": "India",
-        "bbox": {"west": 77.45, "south": 12.85, "east": 77.75, "north": 13.14},
+        "bbox": {"west": 77.45, "south": 12.82, "east": 77.79, "north": 13.15},
         "center": (77.59, 12.97),
         "water_axis": "lat", "water_value": 12.97,  # lakes (Bellandur etc.)
         "coastal": False,
@@ -126,7 +126,7 @@ CITIES = {
     },
     "jaipur": {
         "name": "Jaipur", "state": "Rajasthan", "country": "India",
-        "bbox": {"west": 75.70, "south": 26.80, "east": 75.90, "north": 27.00},
+        "bbox": {"west": 75.68, "south": 26.76, "east": 75.92, "north": 27.03},
         "center": (75.79, 26.91),
         "water_axis": "lat", "water_value": 26.92,
         "coastal": False,
@@ -485,6 +485,34 @@ def city_real_features_file(city_id: str) -> Path:
 
 def city_wards_file(city_id: str) -> Path:
     return city_processed_dir(city_id) / "wards.geojson"
+
+
+def city_mask_file(city_id: str) -> Path:
+    """Cells inside the administrative boundary (pipeline/real/boundary.py)."""
+    return city_processed_dir(city_id) / "city_mask.json"
+
+
+def city_boundary_file(city_id: str) -> Path:
+    return city_processed_dir(city_id) / "boundary.geojson"
+
+
+def data_version(city_id: str) -> tuple:
+    """Cache key for a real-data city: changes whenever any file the API reads changes
+    (features, model predictions, boundary mask), so caches never serve stale data."""
+    d = city_processed_dir(city_id)
+    files = ("features_real.parquet", "predictions_real.parquet", "city_mask.json", "boundary.geojson",
+             "grid.geojson")
+    return (city_id,) + tuple((d / f).stat().st_mtime if (d / f).exists() else 0 for f in files)
+
+
+def load_city_mask(city_id: str) -> dict | None:
+    """{"inside": set(grid_id), "clipped": {grid_id: geometry}} or None when no boundary is built."""
+    import json
+    f = city_mask_file(city_id)
+    if not f.exists():
+        return None
+    m = json.loads(f.read_text())
+    return {"inside": set(m["inside"]), "clipped": m.get("clipped", {}), "name": m.get("boundary_name")}
 
 
 def city_cooling_spots_file(city_id: str) -> Path:

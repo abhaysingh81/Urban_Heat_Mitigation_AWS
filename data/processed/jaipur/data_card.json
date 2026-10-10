@@ -1,6 +1,6 @@
 {
   "city_id": "jaipur",
-  "built_at": "2026-10-10T10:04:52.057239+00:00",
+  "built_at": "2026-10-10T17:11:12.967772+00:00",
   "sources": {
     "landsat": {
       "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
@@ -17,7 +17,7 @@
           "date": "2024-05-26",
           "platform": "landsat-9",
           "cloud_cover": 0.0,
-          "valid_frac": 0.31
+          "valid_frac": 0.374
         },
         {
           "id": "LC09_L2SP_147041_20240526_02_T1",
@@ -31,7 +31,7 @@
           "date": "2024-04-24",
           "platform": "landsat-9",
           "cloud_cover": 0.0,
-          "valid_frac": 0.33
+          "valid_frac": 0.389
         },
         {
           "id": "LC09_L2SP_147041_20240424_02_T1",
@@ -52,7 +52,7 @@
           "date": "2025-05-21",
           "platform": "landsat-8",
           "cloud_cover": 0.0,
-          "valid_frac": 0.323
+          "valid_frac": 0.384
         },
         {
           "id": "LC08_L2SP_147041_20250521_02_T1",
@@ -66,14 +66,14 @@
           "date": "2025-04-27",
           "platform": "landsat-9",
           "cloud_cover": 0.0,
-          "valid_frac": 0.297
+          "valid_frac": 0.365
         },
         {
           "id": "LC08_L2SP_147042_20250419_02_T1",
           "date": "2025-04-19",
           "platform": "landsat-8",
           "cloud_cover": 0.0,
-          "valid_frac": 0.316
+          "valid_frac": 0.378
         },
         {
           "id": "LC08_L2SP_147041_20250419_02_T1",
@@ -87,7 +87,7 @@
           "date": "2026-06-09",
           "platform": "landsat-8",
           "cloud_cover": 0.0,
-          "valid_frac": 0.339
+          "valid_frac": 0.395
         },
         {
           "id": "LC08_L2SP_147041_20260609_02_T1",
@@ -101,7 +101,7 @@
           "date": "2026-05-16",
           "platform": "landsat-9",
           "cloud_cover": 0.0,
-          "valid_frac": 0.306
+          "valid_frac": 0.371
         }
       ]
     },
@@ -141,12 +141,12 @@
   "notes": [
     "OSM building features not collected (opt-in); the model does not use them."
   ],
-  "n_cells": 1800,
-  "target_valid_cells": 1800,
+  "n_cells": 2928,
+  "target_valid_cells": 2928,
   "ward_kind": "2km_analysis_zones",
   "lst_c": {
-    "mean": 48.15,
-    "std": 2.47
+    "mean": 48.95,
+    "std": 2.65
   },
   "features": [
     "grid_id",

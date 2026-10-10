@@ -51,6 +51,22 @@ Update this file whenever something changes state; keep the "Verified how" notes
 - [ ] Extra scenarios from the blueprint: power-cut heatwave, +1.5/+2 °C climate shift, heat + water shortage, school hours, wind corridors
 - [ ] Water link (water points, tanker routes) — Heat & Water track
 
+### D2. Scenario Lab + Ward Planner upgrade (2026-10-10)
+
+- [x] Intervention library: 10 types in physical units (trees, m² roof, km road, ha, sites) with capacity from land cover, capex/opex, water L/day, department, lead time, KPIs (`models/interventions.py`)
+- [x] Planning conditions: today's forecast / typical hot day / custom, climate shift +1…+3 °C, power cut, water shortage (`models/conditions.py`)
+- [x] 12-factor ward risk in 4 groups with weight presets + custom weights, per-ward drivers (`models/ward_factors.py`)
+- [x] Scenario Lab simulator: targeting, saturating stacked effects, feels-like estimate, cost/water, maturity timeline (`models/scenario_lab.py`)
+- [x] Constrained planner: phased budget, 4 objectives + comparison, ward floors/ceilings, mandatory/excluded wards, type caps, water budget, work orders per ward (`models/planner.py`)
+- [x] API `/api/v1/lab/*`, `/api/v1/planner/*`, work-orders CSV; 19 new tests (72 total); all 4 cities < 2 s
+- [x] UI: Scenario Lab page (real cities), Ward Planner page (replaces Ward Risk + Action Plan; old routes redirect); build + lint clean
+- [x] Brief LLM time budget (`BRIEF_DEADLINE_S`, default 20 s → template); officer token on plan status (`OFFICER_TOKEN`); deploy.sh adds CloudFront URL to CORS
+- [x] Maps clipped to city boundaries (OSM admin boundary; `city_mask.json`): Delhi 5,077 cells/351 wards, Mumbai 1,959/143, Jaipur 1,427/101, Bengaluru 2,793/194. Risk, Lab, planner and overview use only in-city cells. Grid bbox covers 90% of Delhi and Jaipur, 96% of Bengaluru — rebuild with a larger bbox to cover the rest
+- [x] Map labels drawn above data on all maps; data fades as you zoom in; city outline drawn
+- [ ] **Browser QA of the two new pages + map changes** — Chrome extension did not respond; not visually checked
+- [ ] Intervention costs, cooling ranges and reference densities are placeholders — cite sources
+- [ ] Old `RiskView.jsx` / `PlanView.jsx` are now unused (routes redirect) — delete after review
+
 ## E. Agent
 
 - [x] Strands agent with 5 registered tools; numbers check; one retry; template fallback; PDF (EN+HI, shaping verified visually)

@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from api.data_source import is_real
 from api.schemas import ScenarioRequest, ScenarioResponse, PresetScenario
-from pipeline.config import city_presets_file
+from pipeline.config import data_version, city_presets_file
 from api.deps import get_city_id
 
 router = APIRouter(prefix="/api/v1/scenarios", tags=["scenarios"])
@@ -30,7 +30,7 @@ _REAL_PRESETS = [
 
 
 @lru_cache(maxsize=16)
-def _real_presets(city_id: str, mtime: float):
+def _real_presets(city_id: str, version: tuple):
     from models.real_simulate import simulate
     out = []
     for sid, name, desc, ints in _REAL_PRESETS:
@@ -73,7 +73,7 @@ async def get_presets(city_id: str = Depends(get_city_id)):
     """
     if is_real(city_id):
         from pipeline.config import city_real_features_file
-        return _real_presets(city_id, city_real_features_file(city_id).stat().st_mtime)
+        return _real_presets(city_id, data_version(city_id))
     presets_file = city_presets_file(city_id)
     if not presets_file.exists():
         return []

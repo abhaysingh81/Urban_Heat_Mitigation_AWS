@@ -1,16 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
-import Map from 'react-map-gl/maplibre';
+import BaseMap from '../components/BaseMap';
 import { Info } from 'lucide-react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { API_BASE } from '../api';
-import { useTheme } from '../ThemeContext';
 import LstExplainerModal from '../components/LstExplainerModal';
 import './ScenarioView.css';
 
-const MAP_STYLE_DARK = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
-const MAP_STYLE_LIGHT = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
 const INTERVENTIONS = [
   { id: 'tree_cover', label: 'Tree Cover', icon: '🌳', maxImpact: 'High' },
@@ -33,7 +29,6 @@ const TIER_COLORS = {
 };
 
 export default function ScenarioView({ city, cityInfo }) {
-  const { theme } = useTheme();
   const [showLstInfo, setShowLstInfo] = useState(false);
   const [gridData, setGridData] = useState(null);
   const [presets, setPresets] = useState([]);
@@ -172,7 +167,7 @@ export default function ScenarioView({ city, cityInfo }) {
     filled: true,
     getFillColor: d => {
       const color = TIER_COLORS[d.properties.tier] || [128, 128, 128];
-      return [...color, 180];
+      return [...color, 255];
     }
   });
 
@@ -184,7 +179,7 @@ export default function ScenarioView({ city, cityInfo }) {
     filled: true,
     getFillColor: d => {
       const color = TIER_COLORS[d.properties.tier] || [128, 128, 128];
-      return [...color, 180];
+      return [...color, 255];
     },
     transitions: { getFillColor: 1000 }
   });
@@ -276,15 +271,11 @@ export default function ScenarioView({ city, cityInfo }) {
                   <Info size={12} />
                 </button>
               </div>
-              <DeckGL key={`before-${city}`} initialViewState={initialViewState} controller={true} layers={[beforeLayer]}>
-                <Map mapStyle={theme === 'light' ? MAP_STYLE_LIGHT : MAP_STYLE_DARK} />
-              </DeckGL>
+              <BaseMap key={`before-${city}`} initialViewState={initialViewState} layers={[beforeLayer]} boundary={gridData?.boundary} />
             </div>
             <div className="map-half">
               <div className="map-label">After</div>
-              <DeckGL key={`after-${city}`} initialViewState={initialViewState} controller={true} layers={[afterLayer]}>
-                <Map mapStyle={theme === 'light' ? MAP_STYLE_LIGHT : MAP_STYLE_DARK} />
-              </DeckGL>
+              <BaseMap key={`after-${city}`} initialViewState={initialViewState} layers={[afterLayer]} boundary={gridData?.boundary} />
             </div>
           </div>
 

@@ -22,6 +22,11 @@ Parameters:
     Type: String
     Default: orange
     AllowedValues: [green, yellow, orange, red]
+  OfficerToken:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: Shared secret required (X-Officer-Token header) to approve or implement plans; empty = open
   MonthlyBudgetUSD:
     Type: Number
     Default: 25
@@ -43,6 +48,8 @@ Globals:
         BEDROCK_GUARDRAIL_VERSION: !GetAtt HeatGuardrailVersion.Version
         RUNTIME_DIR: /tmp/runtime
         CORS_ORIGINS: !Ref ExtraCorsOrigin
+        OFFICER_TOKEN: !Ref OfficerToken
+        BRIEF_DEADLINE_S: '20'
 
 Resources:
   # ── storage ────────────────────────────────────────────────

@@ -37,7 +37,8 @@ async def get_grid(
             west, south, east, north = parts
             filtered = []
             for feat in features:
-                coords = feat["geometry"]["coordinates"][0]
+                g = feat["geometry"]
+                coords = g["coordinates"][0][0] if g["type"] == "MultiPolygon" else g["coordinates"][0]
                 centroid_lon = sum(c[0] for c in coords) / len(coords)
                 centroid_lat = sum(c[1] for c in coords) / len(coords)
                 if west <= centroid_lon <= east and south <= centroid_lat <= north:
@@ -48,6 +49,7 @@ async def get_grid(
         "type": "FeatureCollection",
         "data_kind": data_kind(city_id),
         "features": features,
+        "boundary": geojson.get("boundary"),
     }
 
 

@@ -67,6 +67,27 @@ def assign_tiers(lst: np.ndarray) -> np.ndarray:
     return out
 
 
+def write_grid_geojson(spec: GridSpec) -> None:
+    """Cell polygons for the current fishnet (UTM squares projected to WGS84),
+    so the map grid always matches the real-data cells when the bbox changes."""
+    from pyproj import Transformer
+    from pipeline.config import CRS_WGS84, city_grid_file
+    to_wgs = Transformer.from_crs(spec.crs, CRS_WGS84, always_xy=True)
+    idx = np.arange(spec.n_cells)
+    row, col = spec.idx_to_rowcol(idx)
+    x0 = spec.west + col * spec.cell
+    y0 = spec.south + row * spec.cell
+    xs = np.stack([x0, x0 + spec.cell, x0 + spec.cell, x0, x0], axis=1)
+    ys = np.stack([y0, y0, y0 + spec.cell, y0 + spec.cell, y0], axis=1)
+    lon, lat = to_wgs.transform(xs.ravel(), ys.ravel())
+    lon = np.asarray(lon).reshape(xs.shape); lat = np.asarray(lat).reshape(ys.shape)
+    feats = [{"type": "Feature", "properties": {"grid_id": gid},
+              "geometry": {"type": "Polygon",
+                           "coordinates": [[[round(float(a), 6), round(float(b), 6)] for a, b in zip(lon[i], lat[i])]]}}
+             for i, gid in enumerate(spec.grid_ids())]
+    city_grid_file(spec.city_id).write_text(json.dumps({"type": "FeatureCollection", "features": feats}))
+
+
 def build_city(city_id: str, skip: set[str] = frozenset(), refresh: set[str] = frozenset()):
     spec = GridSpec.for_city(city_id)
     print(f"\n=== {city_id}: {spec.rows}x{spec.cols} = {spec.n_cells} cells ===")
@@ -144,6 +165,7 @@ def build_city(city_id: str, skip: set[str] = frozenset(), refresh: set[str] = f
 
     out = city_real_features_file(city_id)
     df.to_parquet(out, index=False)
+    write_grid_geojson(spec)
     city_cooling_spots_file(city_id).write_text(json.dumps(cooling_spots))
     card.update({
         "n_cells": int(len(df)),

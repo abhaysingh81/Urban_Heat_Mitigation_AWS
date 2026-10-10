@@ -1,20 +1,14 @@
 import { useState, useEffect } from 'react';
-import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
-import Map from 'react-map-gl/maplibre';
+import BaseMap from '../components/BaseMap';
 import { Info } from 'lucide-react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { API_BASE } from '../api';
-import { useTheme } from '../ThemeContext';
 import LstExplainerModal from '../components/LstExplainerModal';
 import ServerWakingNotice from '../components/ServerWakingNotice';
 import ValidationBadge from '../components/ValidationBadge';
 import './MapView.css';
 
-// Map basemap styles — switches with the app theme so the map matches
-// the surrounding UI instead of always staying dark.
-const MAP_STYLE_DARK = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
-const MAP_STYLE_LIGHT = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
 // Tier colors matching backend
 const TIER_COLORS = {
@@ -26,7 +20,6 @@ const TIER_COLORS = {
 };
 
 export default function MapView({ city, cityInfo }) {
-  const { theme } = useTheme();
   const [gridData, setGridData] = useState(null);
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -99,8 +92,8 @@ export default function MapView({ city, cityInfo }) {
       getFillColor: d => {
         const tier = d.properties.tier;
         const color = TIER_COLORS[tier] || [128, 128, 128];
-        // Add alpha based on LST intensity to create a glowing effect
-        return [...color, 180];
+        // full colour; BaseMap sets the layer opacity (fades as you zoom in so place names stay readable)
+        return [...color, 255];
       },
       getElevation: d => {
         // Extrude based on LST (subtract base to exaggerate differences)
@@ -141,20 +134,18 @@ export default function MapView({ city, cityInfo }) {
         {/* key={city} forces a clean remount (and camera reset) whenever
             the selected city changes, since DeckGL's initialViewState
             only applies once on mount otherwise. */}
-        <DeckGL
+        <BaseMap
           key={city}
+          boundary={gridData?.boundary}
           initialViewState={initialViewState}
-          controller={true}
           layers={layers}
           getTooltip={({object}) => object && (
             `Cell: ${object.properties.grid_id}
-LST: ${object.properties.lst_mean.toFixed(1)}°C
+LST: ${object.properties.lst_mean.toFixed(1)}°C${object.properties.lst_source === 'predicted' ? ' (model estimate — no clear satellite pass)' : ''}
 Tier: ${object.properties.tier.toUpperCase()}
 Vegetation: ${(object.properties.frac_vegetation * 100).toFixed(1)}%`
           )}
-        >
-          <Map mapStyle={theme === 'light' ? MAP_STYLE_LIGHT : MAP_STYLE_DARK} />
-        </DeckGL>
+        />
       </div>
 
       {/* KPI Overlay */}

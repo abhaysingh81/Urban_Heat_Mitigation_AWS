@@ -39,14 +39,15 @@ Scored on a city **the model never saw** (trained on the other three):
 
 | Held-out city | Pearson r | RMSE °C | Bias °C | Baseline r (NDVI+impervious) |
 |---|---|---|---|---|
-| new_delhi | 0.79 | 2.397 | -1.917 | -0.306 |
-| mumbai | 0.885 | 3.513 | 0.123 | -0.687 |
-| jaipur | 0.721 | 3.613 | -3.165 | -0.273 |
-| bengaluru | 0.804 | 3.909 | 3.697 | -0.486 |
+| new_delhi | 0.823 | 2.523 | -1.923 | -0.528 |
+| mumbai | 0.821 | 3.944 | 1.253 | -0.696 |
+| jaipur | 0.818 | 3.065 | -2.651 | -0.478 |
+| bengaluru | 0.775 | 3.915 | 3.651 | -0.557 |
 
-Reading it honestly: the **spatial pattern transfers well** (r = 0.721–0.885) — the old synthetic surface had r = −0.47 against real Delhi LST. The **absolute level does not** transfer cleanly
+Reading it honestly: the **spatial pattern transfers well** (r = 0.775–0.823) — the old synthetic surface had r = −0.47 against real Delhi LST. The **absolute level does not** transfer cleanly
 (city-level offsets, see bias/RMSE), which is why hotspot tiers use the *observed* composite and the model is used for gap-filling and scenario deltas.
-The q10–q90 band is conformally widened by 0.25 °C (calibrated block-CV coverage new_delhi 82%, mumbai 73%, jaipur 74%, bengaluru 81%; target 80%).
+The q10–q90 band is conformally widened by 0.17 °C (calibrated block-CV coverage new_delhi 81%, mumbai 78%, jaipur 78%, bengaluru 81%; target 80%).
+Trained on 25,588 cells; each city's grid covers its full administrative boundary (OSM), and maps, risk and plans use only cells inside it.
 
 ## Architecture
 
