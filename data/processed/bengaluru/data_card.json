@@ -1,0 +1,200 @@
+{
+  "city_id": "bengaluru",
+  "built_at": "2026-10-10T10:05:13.770034+00:00",
+  "sources": {
+    "landsat": {
+      "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
+      "scenes": [
+        {
+          "id": "LC08_L2SP_144051_20240427_02_T1",
+          "date": "2024-04-27",
+          "platform": "landsat-8",
+          "cloud_cover": 0.0,
+          "valid_frac": 1.0
+        },
+        {
+          "id": "LC09_L2SP_144051_20240505_02_T1",
+          "date": "2024-05-05",
+          "platform": "landsat-9",
+          "cloud_cover": 0.02,
+          "valid_frac": 0.994
+        },
+        {
+          "id": "LC08_L2SP_144051_20240411_02_T1",
+          "date": "2024-04-11",
+          "platform": "landsat-8",
+          "cloud_cover": 0.15,
+          "valid_frac": 1.0
+        },
+        {
+          "id": "LC08_L2SP_144051_20260401_02_T1",
+          "date": "2026-04-01",
+          "platform": "landsat-8",
+          "cloud_cover": 0.23,
+          "valid_frac": 1.0
+        },
+        {
+          "id": "LC08_L2SP_144051_20250414_02_T1",
+          "date": "2025-04-14",
+          "platform": "landsat-8",
+          "cloud_cover": 0.92,
+          "valid_frac": 0.997
+        },
+        {
+          "id": "LC09_L2SP_144051_20250422_02_T1",
+          "date": "2025-04-22",
+          "platform": "landsat-9",
+          "cloud_cover": 1.33,
+          "valid_frac": 0.999
+        },
+        {
+          "id": "LC09_L2SP_144051_20240403_02_T1",
+          "date": "2024-04-03",
+          "platform": "landsat-9",
+          "cloud_cover": 2.06,
+          "valid_frac": 1.0
+        },
+        {
+          "id": "LC09_L2SP_144051_20250508_02_T1",
+          "date": "2025-05-08",
+          "platform": "landsat-9",
+          "cloud_cover": 5.73,
+          "valid_frac": 0.919
+        },
+        {
+          "id": "LC09_L2SP_144051_20260409_02_T1",
+          "date": "2026-04-09",
+          "platform": "landsat-9",
+          "cloud_cover": 6.69,
+          "valid_frac": 0.992
+        },
+        {
+          "id": "LC08_L2SP_144051_20260417_02_T1",
+          "date": "2026-04-17",
+          "platform": "landsat-8",
+          "cloud_cover": 9.82,
+          "valid_frac": 0.651
+        },
+        {
+          "id": "LC09_L2SP_144051_20250406_02_T1",
+          "date": "2025-04-06",
+          "platform": "landsat-9",
+          "cloud_cover": 12.11,
+          "valid_frac": 0.322
+        },
+        {
+          "id": "LC08_L2SP_144051_20260604_02_T1",
+          "date": "2026-06-04",
+          "platform": "landsat-8",
+          "cloud_cover": 14.37,
+          "valid_frac": 0.886
+        },
+        {
+          "id": "LC08_L2SP_144051_20260503_02_T1",
+          "date": "2026-05-03",
+          "platform": "landsat-8",
+          "cloud_cover": 14.38,
+          "valid_frac": 0.997
+        },
+        {
+          "id": "LC08_L2SP_144051_20250430_02_T1",
+          "date": "2025-04-30",
+          "platform": "landsat-8",
+          "cloud_cover": 15.3,
+          "valid_frac": 0.94
+        }
+      ]
+    },
+    "sentinel2": {
+      "licence": "Copernicus Sentinel-2 L2A \u2014 free and open (Copernicus licence)",
+      "n_scenes": 8
+    },
+    "landcover": {
+      "licence": "ESA WorldCover 2021 \u2014 CC BY 4.0"
+    },
+    "terrain": {
+      "licence": "Copernicus DEM GLO-30 \u2014 Copernicus licence (free use)"
+    },
+    "osm": {
+      "licence": "\u00a9 OpenStreetMap contributors \u2014 ODbL",
+      "tile_coverage": 0.0,
+      "n_buildings": 0
+    },
+    "population": {
+      "licence": "Meta High Resolution Population Density Maps (HRSL) \u2014 CC BY 4.0",
+      "source": "meta_hrsl_30m"
+    },
+    "weather": {
+      "licence": "Open-Meteo archive (ERA5-based) \u2014 CC BY 4.0",
+      "scalars": {
+        "air_temp_max": 34.41,
+        "humidity_mean": 49.1,
+        "wind_speed_mean": 2.65,
+        "solar_radiation": 24.76,
+        "heat_index_c": 38.99,
+        "wet_bulb_c": 25.91
+      },
+      "n_days": 14
+    }
+  },
+  "skipped": [],
+  "notes": [
+    "OSM building features not collected (opt-in); the model does not use them."
+  ],
+  "n_cells": 4225,
+  "target_valid_cells": 4225,
+  "ward_kind": "2km_analysis_zones",
+  "lst_c": {
+    "mean": 40.32,
+    "std": 2.02
+  },
+  "features": [
+    "grid_id",
+    "row",
+    "col",
+    "centroid_lon",
+    "centroid_lat",
+    "lst_c",
+    "lst_std",
+    "n_scenes",
+    "ndvi_mean",
+    "ndvi_std",
+    "ndbi_mean",
+    "mndwi_mean",
+    "frac_impervious",
+    "frac_tree",
+    "frac_vegetation",
+    "frac_bare_soil",
+    "frac_water",
+    "elev_mean",
+    "slope_mean",
+    "building_density",
+    "building_height_mean",
+    "hospital_count",
+    "bus_stop_count",
+    "drinking_water_count",
+    "pop_total",
+    "pop_density",
+    "ndvi_mean_ctx3",
+    "ndvi_mean_ctx7",
+    "frac_impervious_ctx3",
+    "frac_impervious_ctx7",
+    "pop_density_ctx3",
+    "pop_density_ctx7",
+    "air_temp_max",
+    "humidity_mean",
+    "wind_speed_mean",
+    "solar_radiation",
+    "heat_index_c",
+    "wet_bulb_c",
+    "green_deficit",
+    "veg_imperv_ratio",
+    "ward_id",
+    "ward_name",
+    "tier",
+    "lst_mean",
+    "lst_max",
+    "delta_above_mean",
+    "priority_score"
+  ]
+}

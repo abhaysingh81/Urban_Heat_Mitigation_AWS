@@ -6,7 +6,7 @@ import json
 from fastapi import APIRouter, Query, Depends
 from typing import Optional
 
-from pipeline.config import city_grid_file, city_features_file
+from api.data_source import grid_geojson, read_features, data_kind
 from api.deps import get_city_id
 
 router = APIRouter(prefix="/api/v1/grid", tags=["grid"])
@@ -22,9 +22,7 @@ async def get_grid(
     Returns a city's full grid as GeoJSON FeatureCollection.
     Optionally filter by tier and/or bounding box.
     """
-    with open(city_grid_file(city_id)) as f:
-        geojson = json.load(f)
-
+    geojson = grid_geojson(city_id)
     features = geojson["features"]
 
     # Filter by tier
@@ -48,6 +46,7 @@ async def get_grid(
 
     return {
         "type": "FeatureCollection",
+        "data_kind": data_kind(city_id),
         "features": features,
     }
 
@@ -57,8 +56,9 @@ async def get_grid_stats(city_id: str = Depends(get_city_id)):
     """Return summary statistics about a city's grid."""
     import pandas as pd
 
-    df = pd.read_parquet(city_features_file(city_id))
+    df = read_features(city_id)
     return {
+        "data_kind": data_kind(city_id),
         "total_cells": len(df),
         "lst_mean": round(float(df["lst_mean"].mean()), 2),
         "lst_std": round(float(df["lst_mean"].std()), 2),

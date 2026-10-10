@@ -31,6 +31,14 @@ dependencies = [
     "pyproj>=3.6.0",
     "pydantic>=2.5.0",
     "joblib>=1.3.0",
+    "scipy>=1.11.0",
+    "requests>=2.31.0",
+    "boto3>=1.34.0",
+    "mangum>=0.17.0",
+    "fpdf2>=2.7.9",
+    "uharfbuzz>=0.39.0",
+    "affine>=2.4.0",
+    "strands-agents>=1.0.0",
 ]
 
 [project.optional-dependencies]

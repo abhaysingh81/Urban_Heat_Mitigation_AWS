@@ -19,3 +19,9 @@ Thumbs.db
 # Env files (never commit secrets)
 .env
 .env.local
+
+# Real-data raw caches / AWS SAM build
+data/raw/
+.aws-sam/
+.env*
+data/runtime/

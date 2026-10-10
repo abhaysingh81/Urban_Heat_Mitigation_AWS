@@ -172,6 +172,7 @@ Vegetation: ${(object.properties.frac_vegetation * 100).toFixed(1)}%`
               </button>
             </h3>
             <span className="badge">{overview.analysis_period}</span>
+            {overview.data_kind === 'real' && <span className="badge" title="Landsat composite, Apr–Jun 2024–26">observed</span>}
           </div>
 
           <div className="kpi-grid">

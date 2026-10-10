@@ -1,18 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, NavLink } from 'react-router-dom';
-import { Map, BarChart2, Layers, ChevronDown, Sun, Moon, Info, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { Map, BarChart2, Layers, ChevronDown, Sun, Moon, Info, PanelLeftClose, PanelLeftOpen, ShieldAlert, ClipboardList, FileText, Smartphone, Languages } from 'lucide-react';
 import './App.css';
+import './pages/Decision.css';
 import { API_BASE } from './api';
 import { useTheme } from './ThemeContext';
+import { useLang } from './i18n';
 import AboutModal from './components/AboutModal';
 import ServerWakingNotice from './components/ServerWakingNotice';
+import Onboarding from './components/Onboarding';
 
 import MapView from './pages/MapView';
 import DriversView from './pages/DriversView';
 import ScenarioView from './pages/ScenarioView';
+import RiskView from './pages/RiskView';
+import PlanView from './pages/PlanView';
+import ModelCardView from './pages/ModelCardView';
+import CitizenView from './pages/CitizenView';
 
 function App() {
   const { theme, toggleTheme } = useTheme();
+  const { lang, setLang, t } = useLang();
+  const location = useLocation();
   const [showAbout, setShowAbout] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem('urban-heat-sidebar-collapsed') === 'true'
@@ -51,6 +60,13 @@ function App() {
   }, []);
 
   const activeCity = cities.find((c) => c.id === selectedCity);
+
+  // The citizen page is a standalone, mobile-first view: no sidebar.
+  if (location.pathname.startsWith('/citizen')) {
+    return cities.length > 0
+      ? <CitizenView cities={cities} />
+      : <ServerWakingNotice onRetry={fetchCities} error={citiesError} />;
+  }
 
   return (
     <div className="app-container">
@@ -95,17 +111,37 @@ function App() {
         <nav className="sidebar-nav">
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'} end>
             <Map size={20} />
-            <span>Heat Map</span>
+            <span>{t('nav_heat_map')}</span>
           </NavLink>
 
           <NavLink to="/drivers" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <BarChart2 size={20} />
-            <span>Heat Drivers</span>
+            <span>{t('nav_drivers')}</span>
           </NavLink>
 
           <NavLink to="/scenarios" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <Layers size={20} />
-            <span>Scenarios</span>
+            <span>{t('nav_scenarios')}</span>
+          </NavLink>
+
+          <NavLink to="/risk" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <ShieldAlert size={20} />
+            <span>{t('nav_risk')}</span>
+          </NavLink>
+
+          <NavLink to="/plan" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <ClipboardList size={20} />
+            <span>{t('nav_plan')}</span>
+          </NavLink>
+
+          <NavLink to="/model" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <FileText size={20} />
+            <span>{t('nav_model')}</span>
+          </NavLink>
+
+          <NavLink to={`/citizen?city=${selectedCity || ''}`} className="nav-item">
+            <Smartphone size={20} />
+            <span>{t('nav_citizen')}</span>
           </NavLink>
         </nav>
 
@@ -116,6 +152,12 @@ function App() {
               <Info size={12} />
             </span>
           </button>
+
+          <div className="theme-toggle-row">
+            <span className="theme-toggle-label"><Languages size={14} /> {t('language')}</span>
+            <button className="btn-ghost" style={{ padding: '2px 10px' }}
+              onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}>{lang === 'en' ? 'हिंदी' : 'English'}</button>
+          </div>
 
           <div className="theme-toggle-row">
             <span className="theme-toggle-label">
@@ -147,11 +189,20 @@ function App() {
 
       {/* Main Content Area */}
       <main className="main-content">
+        {activeCity && (
+          <div className={`glass-panel dec-banner ${activeCity.data_kind === 'real' ? 'ok' : ''}`}
+               style={{ margin: '0 0 8px', borderRadius: 0 }}>
+            {activeCity.data_kind === 'real' ? t('real_badge') : t('preview_banner')}
+          </div>
+        )}
         {selectedCity && (
           <Routes>
             <Route path="/" element={<MapView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
             <Route path="/drivers" element={<DriversView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
             <Route path="/scenarios" element={<ScenarioView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
+            <Route path="/risk" element={<RiskView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
+            <Route path="/plan" element={<PlanView key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
+            <Route path="/model" element={<ModelCardView />} />
           </Routes>
         )}
 
@@ -160,6 +211,7 @@ function App() {
         )}
       </main>
 
+      <Onboarding />
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
     </div>
   );

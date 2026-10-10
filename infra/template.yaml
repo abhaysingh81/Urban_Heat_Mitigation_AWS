@@ -1,0 +1,318 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  HeatRelief — heat decision system. FastAPI (Lambda container) behind an HTTP API,
+  daily EventBridge forecast job -> ward risk -> SNS alert + Polly advisory,
+  DynamoDB plans/reports, S3 data lake, CloudFront-hosted frontend, CloudWatch dashboard.
+
+Parameters:
+  AlertEmail:
+    Type: String
+    Default: ''
+    Description: Email that receives heat alerts, alarms and the budget notice (leave empty to skip)
+  BedrockModelId:
+    Type: String
+    Default: ''
+    Description: Bedrock model/inference-profile ID enabled in this region (empty = template briefs only)
+  ExtraCorsOrigin:
+    Type: String
+    Default: ''
+    Description: Extra browser origin allowed by the FastAPI CORS middleware (API Gateway itself allows any origin; no credentials are used)
+  AlertMinLevel:
+    Type: String
+    Default: orange
+    AllowedValues: [green, yellow, orange, red]
+  MonthlyBudgetUSD:
+    Type: Number
+    Default: 25
+    Description: AWS Budgets alarm threshold
+
+Conditions:
+  HasEmail: !Not [!Equals [!Ref AlertEmail, '']]
+
+Globals:
+  Function:
+    Architectures: [x86_64]
+    Environment:
+      Variables:
+        DATA_BUCKET: !Ref DataBucket
+        PLANS_TABLE: !Ref PlansTable
+        REPORTS_TABLE: !Ref ReportsTable
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
+        BEDROCK_GUARDRAIL_ID: !GetAtt HeatGuardrail.GuardrailId
+        BEDROCK_GUARDRAIL_VERSION: !GetAtt HeatGuardrailVersion.Version
+        RUNTIME_DIR: /tmp/runtime
+        CORS_ORIGINS: !Ref ExtraCorsOrigin
+
+Resources:
+  # ── storage ────────────────────────────────────────────────
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration: {BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+      LifecycleConfiguration:
+        Rules:
+          - {Id: expire-report-photos, Status: Enabled, Prefix: report_photos/, ExpirationInDays: 90}
+          - {Id: expire-briefs, Status: Enabled, Prefix: briefs/, ExpirationInDays: 30}
+      CorsConfiguration:
+        CorsRules:
+          - {AllowedMethods: [PUT], AllowedOrigins: ['*'], AllowedHeaders: ['*'], MaxAge: 600}
+
+  PlansTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: id, AttributeType: S}]
+      KeySchema: [{AttributeName: id, KeyType: HASH}]
+      SSESpecification: {SSEEnabled: true}
+
+  ReportsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: id, AttributeType: S}]
+      KeySchema: [{AttributeName: id, KeyType: HASH}]
+      SSESpecification: {SSEEnabled: true}
+
+  # ── agent guardrail: stay on heat/cooling, no medical advice ─
+  HeatGuardrail:
+    Type: AWS::Bedrock::Guardrail
+    Properties:
+      Name: !Sub '${AWS::StackName}-heat-officer'
+      Description: Keeps the Heat Officer agent on heat, cooling and ward planning; no diagnosis or prescriptions.
+      BlockedInputMessaging: This assistant only helps with heat safety and cooling plans. For medical emergencies call 112 or 108.
+      BlockedOutputsMessaging: This assistant only helps with heat safety and cooling plans. For medical emergencies call 112 or 108.
+      TopicPolicyConfig:
+        TopicsConfig:
+          - Name: medical-diagnosis-or-treatment
+            Type: DENY
+            Definition: Diagnosing medical conditions, recommending medicines or dosages, or giving treatment plans beyond basic cooling and first-aid safety guidance.
+            Examples:
+              - What medicine should I take for heatstroke?
+              - Diagnose my symptoms.
+          - Name: off-topic
+            Type: DENY
+            Definition: Requests unrelated to heat, cooling, ward risk, or urban heat planning, such as politics, finance advice or general chat.
+            Examples:
+              - Who should I vote for?
+              - Write me a poem about cars.
+      ContentPolicyConfig:
+        FiltersConfig:
+          - {Type: HATE, InputStrength: HIGH, OutputStrength: HIGH}
+          - {Type: VIOLENCE, InputStrength: HIGH, OutputStrength: HIGH}
+          - {Type: SEXUAL, InputStrength: HIGH, OutputStrength: HIGH}
+          - {Type: PROMPT_ATTACK, InputStrength: HIGH, OutputStrength: NONE}
+
+  HeatGuardrailVersion:
+    Type: AWS::Bedrock::GuardrailVersion
+    Properties:
+      GuardrailIdentifier: !GetAtt HeatGuardrail.GuardrailId
+      Description: v1
+
+  # ── alerts ─────────────────────────────────────────────────
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties: {DisplayName: HeatRelief alerts}
+
+  AlertEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasEmail
+    Properties: {TopicArn: !Ref AlertTopic, Protocol: email, Endpoint: !Ref AlertEmail}
+
+  # ── API (FastAPI in a Lambda container) ─────────────────────
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      DefaultRouteSettings: {ThrottlingBurstLimit: 20, ThrottlingRateLimit: 10}
+      CorsConfiguration:
+        AllowOrigins: ['*']          # public read API; no credentials are used
+        AllowMethods: [GET, POST, PUT, OPTIONS]
+        AllowHeaders: ['*']
+        ExposeHeaders: [X-Model-Version, X-Data-Date]
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      MemorySize: 2048
+      Timeout: 29
+      Policies:
+        - S3CrudPolicy: {BucketName: !Ref DataBucket}
+        - DynamoDBCrudPolicy: {TableName: !Ref PlansTable}
+        - DynamoDBCrudPolicy: {TableName: !Ref ReportsTable}
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream, bedrock:ApplyGuardrail]
+              Resource: '*'   # model/profile/guardrail ARNs vary by region and ID; narrow after choosing a model
+      Events:
+        Any:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: '/{proxy+}'
+            Method: ANY
+        Root:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /
+            Method: ANY
+    Metadata:
+      Dockerfile: infra/Dockerfile
+      DockerContext: ..
+      DockerTag: heatrelief
+
+  # ── daily forecast -> risk -> alert ─────────────────────────
+  RefreshFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageConfig: {Command: ['lambdas.refresh_forecast.app.handler']}
+      MemorySize: 1536
+      Timeout: 300
+      Environment:
+        Variables:
+          ALERT_TOPIC_ARN: !Ref AlertTopic
+          ALERT_MIN_LEVEL: !Ref AlertMinLevel
+      Policies:
+        - S3CrudPolicy: {BucketName: !Ref DataBucket}
+        - SNSPublishMessagePolicy: {TopicName: !GetAtt AlertTopic.TopicName}
+        - Statement:
+            - {Effect: Allow, Action: [polly:SynthesizeSpeech], Resource: '*'}
+      Events:
+        Daily:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(0 6 * * ? *)
+            ScheduleExpressionTimezone: Asia/Kolkata
+            Description: Daily 06:00 IST forecast refresh and heat alert
+    Metadata:
+      Dockerfile: infra/Dockerfile
+      DockerContext: ..
+      DockerTag: heatrelief
+
+  # ── frontend (S3 + CloudFront, private bucket via OAC) ──────
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration: {BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true}
+
+  FrontendOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        Origins:
+          - Id: frontend
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt FrontendOAC.Id
+            S3OriginConfig: {OriginAccessIdentity: ''}
+        DefaultCacheBehavior:
+          TargetOriginId: frontend
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6   # Managed-CachingOptimized
+          Compress: true
+        CustomErrorResponses:    # single-page-app routing
+          - {ErrorCode: 403, ResponseCode: 200, ResponsePagePath: /index.html}
+          - {ErrorCode: 404, ResponseCode: 200, ResponsePagePath: /index.html}
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: {Service: cloudfront.amazonaws.com}
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}'
+
+  # ── observability ──────────────────────────────────────────
+  ApiErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: API Lambda errors
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions: [{Name: FunctionName, Value: !Ref ApiFunction}]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+
+  RefreshFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Daily forecast refresh failed for a city
+      Namespace: HeatRelief
+      MetricName: RefreshFailed
+      Dimensions: [{Name: City, Value: new_delhi}]
+      Statistic: Sum
+      Period: 86400
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertTopic]
+
+  Dashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub '${AWS::StackName}-heatrelief'
+      DashboardBody: !Sub |
+        {"widgets":[
+          {"type":"metric","x":0,"y":0,"width":12,"height":6,"properties":{"title":"API requests / errors","region":"${AWS::Region}","stat":"Sum","period":300,
+            "metrics":[["AWS/Lambda","Invocations","FunctionName","${ApiFunction}"],["AWS/Lambda","Errors","FunctionName","${ApiFunction}"]]}},
+          {"type":"metric","x":12,"y":0,"width":12,"height":6,"properties":{"title":"API latency (ms)","region":"${AWS::Region}","stat":"p95","period":300,
+            "metrics":[["AWS/Lambda","Duration","FunctionName","${ApiFunction}"]]}},
+          {"type":"metric","x":0,"y":6,"width":12,"height":6,"properties":{"title":"Heat alerts fired / refresh status","region":"${AWS::Region}","stat":"Sum","period":86400,
+            "metrics":[["HeatRelief","AlertsFired","City","new_delhi"],["HeatRelief","RefreshOk","City","new_delhi"],["HeatRelief","RefreshFailed","City","new_delhi"]]}},
+          {"type":"metric","x":12,"y":6,"width":12,"height":6,"properties":{"title":"Plans and reports tables (writes)","region":"${AWS::Region}","stat":"Sum","period":300,
+            "metrics":[["AWS/DynamoDB","ConsumedWriteCapacityUnits","TableName","${PlansTable}"],["AWS/DynamoDB","ConsumedWriteCapacityUnits","TableName","${ReportsTable}"]]}}
+        ]}
+
+  MonthlyBudget:
+    Type: AWS::Budgets::Budget
+    Condition: HasEmail
+    Properties:
+      Budget:
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: {Amount: !Ref MonthlyBudgetUSD, Unit: USD}
+      NotificationsWithSubscribers:
+        - Notification: {NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 80}
+          Subscribers: [{SubscriptionType: EMAIL, Address: !Ref AlertEmail}]
+
+Outputs:
+  ApiUrl:
+    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+  FrontendUrl:
+    Value: !Sub 'https://${FrontendDistribution.DomainName}'
+  FrontendBucketName:
+    Value: !Ref FrontendBucket
+  FrontendDistributionId:
+    Value: !Ref FrontendDistribution
+  DataBucketName:
+    Value: !Ref DataBucket
+  AlertTopicArn:
+    Value: !Ref AlertTopic

@@ -259,7 +259,8 @@ def list_cities() -> list:
     """Return cities sorted alphabetically by display name, for the
     /api/v1/cities endpoint and the frontend's city picker."""
     return [
-        {"id": cid, **{k: v for k, v in c.items() if k not in ("water_axis", "water_value")}}
+        {"id": cid, "data_kind": "real" if (cid in REAL_CITIES and city_real_features_file(cid).exists()) else "synthetic_preview",
+         **{k: v for k, v in c.items() if k not in ("water_axis", "water_value")}}
         for cid, c in sorted(CITIES.items(), key=lambda kv: kv[1]["name"])
     ]
 
@@ -414,3 +415,81 @@ def city_features_file(city_id: str) -> Path:
 
 def city_presets_file(city_id: str) -> Path:
     return city_scenarios_dir(city_id) / "presets.json"
+
+
+# ═══════════════════════════════════════════════════════════════
+# Real-data tier (HeatRelief). Cities listed in REAL_CITIES are built
+# from real satellite/ancillary data (pipeline/real/); every other city
+# in CITIES stays a labelled synthetic preview.
+# ═══════════════════════════════════════════════════════════════
+
+REAL_CITIES = ["new_delhi", "mumbai", "jaipur", "bengaluru"]
+REAL_HERO_CITY = "new_delhi"
+
+# Composite window: hot-season months across several years, so the
+# target is a multi-scene median rather than one lucky/unlucky pass.
+REAL_YEARS = [2024, 2025, 2026]
+REAL_MONTHS = [4, 5, 6]
+REAL_MIN_SCENES = 6
+REAL_MAX_SCENES = 14
+REAL_CLOUD_MAX = 20  # percent
+
+REAL_MODEL_DIR = MODEL_DIR / "real"
+REAL_RAW_DIR = RAW_DIR / "real"
+
+# Cooling effect ranges (°C, negative = cooler) at full intensity, from
+# the published urban-heat literature (street-level/surface-temperature
+# studies; broad ranges on purpose). Simulated deltas are clamped into
+# this band and always reported as low/mid/high estimates.
+# survival: fraction of plantings that persist (user-adjustable).
+# years_to_full: years until the full effect is reached.
+# cost_inr_per_cell: rough capital cost for one 500 m cell at full
+# intensity, in INR lakh. Planning-grade placeholders, not quotes.
+REAL_INTERVENTIONS = {
+    "tree_cover": {
+        "label": "Tree cover", "cooling_range_c": (-3.0, -0.8),
+        "years_to_full": 8, "cost_lakh_per_cell": 120.0, "uses_survival": True,
+        "feature_mods": {"tree_canopy_frac": 0.30, "ndvi_mean": 0.15, "frac_impervious": -0.10},
+    },
+    "cool_roofs": {
+        "label": "Cool roofs", "cooling_range_c": (-1.5, -0.4),
+        "years_to_full": 0, "cost_lakh_per_cell": 60.0, "uses_survival": False,
+        "feature_mods": {"ndbi_mean": -0.10},
+    },
+    "shade_structures": {
+        "label": "Shade structures (bus stops, markets)", "cooling_range_c": (-2.0, -0.5),
+        "years_to_full": 0, "cost_lakh_per_cell": 45.0, "uses_survival": False,
+        "feature_mods": {"ndbi_mean": -0.05},
+    },
+    "cool_pavement": {
+        "label": "Cool pavements", "cooling_range_c": (-1.2, -0.3),
+        "years_to_full": 1, "cost_lakh_per_cell": 80.0, "uses_survival": False,
+        "feature_mods": {"ndbi_mean": -0.06},
+    },
+    "cooling_centre": {
+        "label": "Cooling centre", "cooling_range_c": (0.0, 0.0),
+        "years_to_full": 0, "cost_lakh_per_cell": 25.0, "uses_survival": False,
+        "feature_mods": {},
+        "protects_radius_m": 500,
+    },
+}
+
+
+def is_real_city(city_id: str) -> bool:
+    return city_id in REAL_CITIES
+
+
+def city_real_features_file(city_id: str) -> Path:
+    return city_processed_dir(city_id) / "features_real.parquet"
+
+
+def city_wards_file(city_id: str) -> Path:
+    return city_processed_dir(city_id) / "wards.geojson"
+
+
+def city_cooling_spots_file(city_id: str) -> Path:
+    return city_processed_dir(city_id) / "cooling_spots.json"
+
+
+def city_data_card_file(city_id: str) -> Path:
+    return city_processed_dir(city_id) / "data_card.json"

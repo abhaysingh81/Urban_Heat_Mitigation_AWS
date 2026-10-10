@@ -110,6 +110,9 @@ class ScenarioSummary(BaseModel):
     hotspot_reduction_pct: float
     cost_estimate_m: float
     cost_efficiency_c_per_m: float
+    # Real-data cities only: published-range-based estimate band (°C, negative = cooler)
+    cooling_range_c: Optional[dict[str, float]] = None
+    is_estimate: bool = False
 
 
 class CellResult(BaseModel):
@@ -157,3 +160,4 @@ class OverviewResponse(BaseModel):
     best_intervention: str
     max_potential_cooling_c: float
     tier_distribution: dict[str, int]
+    data_kind: str = "synthetic_preview"

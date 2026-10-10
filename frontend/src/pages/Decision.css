@@ -1,0 +1,53 @@
+/* Shared styles for the decision pages (Risk, Plan, Model card, Citizen). */
+.dec-grid { display: grid; gap: 20px; }
+.dec-grid.two { grid-template-columns: 1fr 1fr; }
+.dec-grid.three { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1100px) { .dec-grid.two, .dec-grid.three { grid-template-columns: 1fr; } }
+.dec-card { padding: 20px; }
+.dec-card h3 { font-size: 17px; margin-bottom: 4px; }
+.dec-note { color: var(--text-secondary); font-size: 13px; }
+.dec-banner { padding: 10px 14px; margin-bottom: 16px; border-left: 3px solid var(--tier-high); font-size: 13px; }
+.dec-banner.ok { border-left-color: var(--tier-normal); }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--overlay-5); }
+.pill.green { background: color-mix(in srgb, var(--tier-normal) 25%, transparent); }
+.pill.yellow { background: color-mix(in srgb, var(--tier-moderate) 30%, transparent); }
+.pill.orange { background: color-mix(in srgb, var(--tier-high) 30%, transparent); }
+.pill.red { background: color-mix(in srgb, var(--tier-critical) 30%, transparent); }
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 14px 0; }
+.stat { padding: 12px; background: var(--sunken-bg); border-radius: var(--radius-md); }
+.stat .label { font-size: 12px; color: var(--text-secondary); }
+.stat .value { font-family: var(--font-display); font-size: 22px; font-weight: 600; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.field label { font-size: 13px; color: var(--text-secondary); display: flex; justify-content: space-between; }
+.field input[type=range] { width: 100%; }
+.checks { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.checks label { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+.btn-primary { background: var(--accent-primary); color: #fff; border: 0; padding: 10px 18px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: .5; cursor: wait; }
+.btn-ghost { background: var(--overlay-4); color: var(--text-primary); border: 1px solid var(--glass-border); padding: 8px 14px; border-radius: var(--radius-md); cursor: pointer; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+table.dec-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.dec-table th { text-align: left; color: var(--text-secondary); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--glass-border); }
+table.dec-table td { padding: 7px 8px; border-bottom: 1px solid var(--overlay-3); }
+table.dec-table tr.sel { background: var(--overlay-4); }
+table.dec-table tr.click { cursor: pointer; }
+.bar { height: 8px; border-radius: 4px; background: var(--overlay-5); overflow: hidden; min-width: 60px; }
+.bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--tier-moderate), var(--tier-critical)); }
+.brief-box { white-space: pre-wrap; font-size: 14px; line-height: 1.55; padding: 14px; background: var(--sunken-bg); border-radius: var(--radius-md); margin-top: 8px; }
+.error-text { color: var(--tier-critical); font-size: 13px; }
+
+/* citizen (mobile-first) */
+.citizen { max-width: 460px; margin: 0 auto; padding: 16px; }
+.citizen .hero { padding: 20px; border-radius: var(--radius-lg); text-align: center; }
+.citizen .hero.green { background: color-mix(in srgb, var(--tier-normal) 22%, var(--bg-secondary)); }
+.citizen .hero.yellow { background: color-mix(in srgb, var(--tier-moderate) 26%, var(--bg-secondary)); }
+.citizen .hero.orange { background: color-mix(in srgb, var(--tier-high) 28%, var(--bg-secondary)); }
+.citizen .hero.red { background: color-mix(in srgb, var(--tier-critical) 28%, var(--bg-secondary)); }
+.citizen .hero h2 { font-size: 26px; margin: 6px 0; }
+.citizen .hero p { font-size: 17px; line-height: 1.45; }
+.citizen .spot { display: flex; justify-content: space-between; align-items: center; padding: 14px; margin-top: 8px; min-height: 56px; }
+.citizen .spot a { color: var(--accent-primary); font-weight: 600; padding: 10px; }
+.citizen .big-btn { width: 100%; min-height: 52px; font-size: 16px; margin-top: 8px; }
+.citizen .lang { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; }
+select { background: var(--select-option-bg); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 8px 10px; }

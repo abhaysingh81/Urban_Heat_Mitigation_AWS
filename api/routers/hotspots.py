@@ -7,7 +7,8 @@ import numpy as np
 import pandas as pd
 from fastapi import APIRouter, Depends
 
-from pipeline.config import CITIES, TIER_COLORS, city_features_file
+from pipeline.config import CITIES, TIER_COLORS
+from api.data_source import read_features, is_real, data_kind
 from api.deps import get_city_id
 
 router = APIRouter(prefix="/api/v1/hotspots", tags=["hotspots"])
@@ -19,7 +20,7 @@ async def get_hotspots(city_id: str = Depends(get_city_id)):
     Returns clustered hotspot regions with summary statistics for a city.
     Uses DBSCAN to cluster contiguous hotspot cells.
     """
-    df = pd.read_parquet(city_features_file(city_id))
+    df = read_features(city_id)
 
     # City-wide stats
     mean_lst = float(df["lst_mean"].mean())
@@ -33,6 +34,7 @@ async def get_hotspots(city_id: str = Depends(get_city_id)):
         "total_cells": len(df),
         "hotspot_cells": hotspot_cells,
         "hotspot_pct": round(hotspot_cells / len(df) * 100, 1),
+        "data_kind": data_kind(city_id),
     }
 
     # Cluster hotspot cells using DBSCAN
@@ -62,8 +64,13 @@ async def get_hotspots(city_id: str = Depends(get_city_id)):
     clusters = []
     # Try to load SHAP importance for primary driver
     try:
-        from models.explain import get_global_importance
-        importance = get_global_importance()
+        if is_real(city_id):
+            from models.explain_real import global_importance as get_global_importance
+            importance = get_global_importance()
+            importance = [{"feature": d["feature"]} for d in importance]
+        else:
+            from models.explain import get_global_importance
+            importance = get_global_importance()
         top_driver = importance[0]["feature"] if importance else "frac_impervious"
     except Exception:
         top_driver = "frac_impervious"

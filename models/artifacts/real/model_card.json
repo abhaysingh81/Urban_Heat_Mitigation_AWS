@@ -1,0 +1,1210 @@
+{
+  "model_version": "real-v1-20261010",
+  "trained_at": "2026-10-10T10:06:35.778428+00:00",
+  "target": "Landsat 8/9 C2 L2 ST_B10 median composite (\u00b0C), Apr\u2013Jun 2024\u20132026",
+  "cities": [
+    "bengaluru",
+    "jaipur",
+    "mumbai",
+    "new_delhi"
+  ],
+  "n_cells": 19681,
+  "shipped_variant": "spatial+weather",
+  "features": [
+    "frac_impervious",
+    "frac_tree",
+    "frac_vegetation",
+    "frac_bare_soil",
+    "frac_water",
+    "ndvi_mean",
+    "ndvi_std",
+    "ndbi_mean",
+    "mndwi_mean",
+    "elev_mean",
+    "slope_mean",
+    "pop_density",
+    "green_deficit",
+    "veg_imperv_ratio",
+    "ndvi_mean_ctx3",
+    "ndvi_mean_ctx7",
+    "frac_impervious_ctx3",
+    "frac_impervious_ctx7",
+    "pop_density_ctx3",
+    "pop_density_ctx7",
+    "air_temp_max",
+    "humidity_mean",
+    "wind_speed_mean",
+    "solar_radiation",
+    "heat_index_c",
+    "wet_bulb_c"
+  ],
+  "evaluation": {
+    "spatial": {
+      "features": [
+        "frac_impervious",
+        "frac_tree",
+        "frac_vegetation",
+        "frac_bare_soil",
+        "frac_water",
+        "ndvi_mean",
+        "ndvi_std",
+        "ndbi_mean",
+        "mndwi_mean",
+        "elev_mean",
+        "slope_mean",
+        "pop_density",
+        "green_deficit",
+        "veg_imperv_ratio",
+        "ndvi_mean_ctx3",
+        "ndvi_mean_ctx7",
+        "frac_impervious_ctx3",
+        "frac_impervious_ctx7",
+        "pop_density_ctx3",
+        "pop_density_ctx7"
+      ],
+      "leave_one_city_out": {
+        "new_delhi": {
+          "n": 9792,
+          "r2": 0.522,
+          "rmse": 1.623,
+          "mae": 1.276,
+          "pearson_r": 0.811,
+          "bias": 0.068
+        },
+        "mumbai": {
+          "n": 3864,
+          "r2": 0.829,
+          "rmse": 2.279,
+          "mae": 1.918,
+          "pearson_r": 0.948,
+          "bias": 0.96
+        },
+        "jaipur": {
+          "n": 1800,
+          "r2": -4.641,
+          "rmse": 5.856,
+          "mae": 5.595,
+          "pearson_r": 0.734,
+          "bias": -5.594
+        },
+        "bengaluru": {
+          "n": 4225,
+          "r2": -6.238,
+          "rmse": 5.434,
+          "mae": 5.278,
+          "pearson_r": 0.832,
+          "bias": 5.277
+        }
+      },
+      "baseline_global_mean": {
+        "new_delhi": {
+          "n": 9792,
+          "r2": null,
+          "rmse": null,
+          "mae": null,
+          "pearson_r": null,
+          "bias": null
+        },
+        "mumbai": {
+          "n": 3864,
+          "r2": null,
+          "rmse": null,
+          "mae": null,
+          "pearson_r": null,
+          "bias": null
+        },
+        "jaipur": {
+          "n": 1800,
+          "r2": null,
+          "rmse": null,
+          "mae": null,
+          "pearson_r": null,
+          "bias": null
+        },
+        "bengaluru": {
+          "n": 4225,
+          "r2": null,
+          "rmse": null,
+          "mae": null,
+          "pearson_r": null,
+          "bias": null
+        }
+      },
+      "baseline_linear_ndvi_impervious": {
+        "new_delhi": {
+          "n": 9792,
+          "r2": -2.605,
+          "rmse": 4.456,
+          "mae": 3.419,
+          "pearson_r": -0.306,
+          "bias": -2.702
+        },
+        "mumbai": {
+          "n": 3864,
+          "r2": -4.765,
+          "rmse": 13.225,
+          "mae": 9.352,
+          "pearson_r": -0.687,
+          "bias": 9.003
+        },
+        "jaipur": {
+          "n": 1800,
+          "r2": -7.519,
+          "rmse": 7.197,
+          "mae": 6.566,
+          "pearson_r": -0.273,
+          "bias": -6.542
+        },
+        "bengaluru": {
+          "n": 4225,
+          "r2": -3.803,
+          "rmse": 4.427,
+          "mae": 3.779,
+          "pearson_r": -0.486,
+          "bias": 3.265
+        }
+      }
+    },
+    "spatial+weather": {
+      "features": [
+        "frac_impervious",
+        "frac_tree",
+        "frac_vegetation",
+        "frac_bare_soil",
+        "frac_water",
+        "ndvi_mean",
+        "ndvi_std",
+        "ndbi_mean",
+        "mndwi_mean",
+        "elev_mean",
+        "slope_mean",
+        "pop_density",
+        "green_deficit",
+        "veg_imperv_ratio",
+        "ndvi_mean_ctx3",
+        "ndvi_mean_ctx7",
+        "frac_impervious_ctx3",
+        "frac_impervious_ctx7",
+        "pop_density_ctx3",
+        "pop_density_ctx7",
+        "air_temp_max",
+        "humidity_mean",
+        "wind_speed_mean",
+        "solar_radiation",
+        "heat_index_c",
+        "wet_bulb_c"
+      ],
+      "leave_one_city_out": {
+        "new_delhi": {
+          "n": 9792,
+          "r2": -0.043,
+          "rmse": 2.397,
+          "mae": 2.061,
+          "pearson_r": 0.79,
+          "bias": -1.917
+        },
+        "mumbai": {
+          "n": 3864,
+          "r2": 0.593,
+          "rmse": 3.513,
+          "mae": 3.0,
+          "pearson_r": 0.885,
+          "bias": 0.123
+        },
+        "jaipur": {
+          "n": 1800,
+          "r2": -1.147,
+          "rmse": 3.613,
+          "mae": 3.27,
+          "pearson_r": 0.721,
+          "bias": -3.165
+        },
+        "bengaluru": {
+          "n": 4225,
+          "r2": -2.744,
+          "rmse": 3.909,
+          "mae": 3.701,
+          "pearson_r": 0.804,
+          "bias": 3.697
+        }
+      },
+      "baseline_global_mean": {
+        "new_delhi": {
+          "n": 9792,
+          "r2": null,
+          "rmse": null,
+          "mae": null,
+          "pearson_r": null,
+          "bias": null
+        },
+        "mumbai": {
+          "n": 3864,
+          "r2": null,
+          "rmse": null,
+          "mae": null,
+          "pearson_r": null,
+          "bias": null
+        },
+        "jaipur": {
+          "n": 1800,
+          "r2": null,
+          "rmse": null,
+          "mae": null,
+          "pearson_r": null,
+          "bias": null
+        },
+        "bengaluru": {
+          "n": 4225,
+          "r2": null,
+          "rmse": null,
+          "mae": null,
+          "pearson_r": null,
+          "bias": null
+        }
+      },
+      "baseline_linear_ndvi_impervious": {
+        "new_delhi": {
+          "n": 9792,
+          "r2": -2.605,
+          "rmse": 4.456,
+          "mae": 3.419,
+          "pearson_r": -0.306,
+          "bias": -2.702
+        },
+        "mumbai": {
+          "n": 3864,
+          "r2": -4.765,
+          "rmse": 13.225,
+          "mae": 9.352,
+          "pearson_r": -0.687,
+          "bias": 9.003
+        },
+        "jaipur": {
+          "n": 1800,
+          "r2": -7.519,
+          "rmse": 7.197,
+          "mae": 6.566,
+          "pearson_r": -0.273,
+          "bias": -6.542
+        },
+        "bengaluru": {
+          "n": 4225,
+          "r2": -3.803,
+          "rmse": 4.427,
+          "mae": 3.779,
+          "pearson_r": -0.486,
+          "bias": 3.265
+        }
+      }
+    }
+  },
+  "block_cv_5km": {
+    "per_city": {
+      "new_delhi": {
+        "n": 9792,
+        "r2": 0.796,
+        "rmse": 1.06,
+        "mae": 0.791,
+        "pearson_r": 0.892,
+        "bias": 0.017
+      },
+      "mumbai": {
+        "n": 3864,
+        "r2": 0.958,
+        "rmse": 1.129,
+        "mae": 0.812,
+        "pearson_r": 0.979,
+        "bias": 0.037
+      },
+      "jaipur": {
+        "n": 1800,
+        "r2": 0.773,
+        "rmse": 1.175,
+        "mae": 0.861,
+        "pearson_r": 0.879,
+        "bias": -0.01
+      },
+      "bengaluru": {
+        "n": 4225,
+        "r2": 0.803,
+        "rmse": 0.897,
+        "mae": 0.679,
+        "pearson_r": 0.896,
+        "bias": 0.043
+      }
+    },
+    "q10_q90_coverage": {
+      "new_delhi": 0.728,
+      "mumbai": 0.591,
+      "jaipur": 0.633,
+      "bengaluru": 0.694
+    },
+    "calibrated_coverage": {
+      "new_delhi": 0.827,
+      "mumbai": 0.738,
+      "jaipur": 0.746,
+      "bengaluru": 0.817
+    },
+    "band_widen_c": 0.25,
+    "nominal_coverage": 0.8
+  },
+  "top_drivers_shap": [
+    {
+      "feature": "frac_water",
+      "mean_abs_shap": 1.2282
+    },
+    {
+      "feature": "ndbi_mean",
+      "mean_abs_shap": 1.201
+    },
+    {
+      "feature": "air_temp_max",
+      "mean_abs_shap": 0.8178
+    },
+    {
+      "feature": "mndwi_mean",
+      "mean_abs_shap": 0.5699
+    },
+    {
+      "feature": "elev_mean",
+      "mean_abs_shap": 0.4606
+    },
+    {
+      "feature": "ndvi_mean",
+      "mean_abs_shap": 0.2349
+    },
+    {
+      "feature": "ndvi_mean_ctx3",
+      "mean_abs_shap": 0.1792
+    },
+    {
+      "feature": "humidity_mean",
+      "mean_abs_shap": 0.1628
+    },
+    {
+      "feature": "frac_tree",
+      "mean_abs_shap": 0.1589
+    },
+    {
+      "feature": "slope_mean",
+      "mean_abs_shap": 0.1201
+    }
+  ],
+  "quality_gate": {
+    "min_pearson_r_leave_city_out": 0.3,
+    "passed": true,
+    "failing_cities": []
+  },
+  "limitations": [
+    "Land surface temperature is not air temperature or heat stress.",
+    "Model learns correlations across cells; SHAP explains the model, not causal effects.",
+    "Weather features are city-level (constant within a city) and help between-city transfer only.",
+    "Cells outside the best Landsat tile footprint have no target and are excluded from training.",
+    "Spatial pattern transfers across cities far better than absolute level: a city-level offset (see bias and R\u00b2) remains for cities the model has not seen.",
+    "With four training cities the model cannot learn a reliable weather-to-level relationship; weather features are included only if they lower leave-city-out RMSE.",
+    "The q10\u2013q90 band is conformally widened; calibrated coverage is measured on the same block-CV folds used to widen it, so it is optimistic.",
+    "Cooling-scenario results are estimates clamped to published ranges, not guarantees."
+  ],
+  "data_cards": {
+    "new_delhi": {
+      "city_id": "new_delhi",
+      "built_at": "2026-10-10T10:02:33.507555+00:00",
+      "sources": {
+        "landsat": {
+          "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
+          "scenes": [
+            {
+              "id": "LC08_L2SP_147040_20240603_02_T1",
+              "date": "2024-06-03",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.646
+            },
+            {
+              "id": "LC09_L2SP_147040_20240526_02_T1",
+              "date": "2024-05-26",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.638
+            },
+            {
+              "id": "LC08_L2SP_147040_20240518_02_T1",
+              "date": "2024-05-18",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.627
+            },
+            {
+              "id": "LC09_L2SP_147040_20240424_02_T1",
+              "date": "2024-04-24",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.685
+            },
+            {
+              "id": "LC09_L2SP_147040_20240408_02_T1",
+              "date": "2024-04-08",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.574
+            },
+            {
+              "id": "LC08_L2SP_147040_20250521_02_T1",
+              "date": "2025-05-21",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.646
+            },
+            {
+              "id": "LC08_L2SP_147040_20250403_02_T1",
+              "date": "2025-04-03",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.615
+            },
+            {
+              "id": "LC08_L2SP_147040_20260609_02_T1",
+              "date": "2026-06-09",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.683
+            },
+            {
+              "id": "LC09_L2SP_146040_20260423_02_T1",
+              "date": "2026-04-23",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC08_L2SP_146040_20260415_02_T1",
+              "date": "2026-04-15",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC09_L2SP_147040_20260414_02_T1",
+              "date": "2026-04-14",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.619
+            },
+            {
+              "id": "LC09_L2SP_146040_20250404_02_T1",
+              "date": "2025-04-04",
+              "platform": "landsat-9",
+              "cloud_cover": 0.01,
+              "valid_frac": 0.999
+            },
+            {
+              "id": "LC08_L2SP_147040_20260422_02_T1",
+              "date": "2026-04-22",
+              "platform": "landsat-8",
+              "cloud_cover": 0.01,
+              "valid_frac": 0.56
+            },
+            {
+              "id": "LC09_L2SP_147040_20260617_02_T1",
+              "date": "2026-06-17",
+              "platform": "landsat-9",
+              "cloud_cover": 0.02,
+              "valid_frac": 0.664
+            }
+          ]
+        },
+        "sentinel2": {
+          "licence": "Copernicus Sentinel-2 L2A \u2014 free and open (Copernicus licence)",
+          "n_scenes": 8
+        },
+        "landcover": {
+          "licence": "ESA WorldCover 2021 \u2014 CC BY 4.0"
+        },
+        "terrain": {
+          "licence": "Copernicus DEM GLO-30 \u2014 Copernicus licence (free use)"
+        },
+        "osm": {
+          "licence": "\u00a9 OpenStreetMap contributors \u2014 ODbL",
+          "tile_coverage": 0.0,
+          "n_buildings": 0
+        },
+        "population": {
+          "licence": "Meta High Resolution Population Density Maps (HRSL) \u2014 CC BY 4.0",
+          "source": "meta_hrsl_30m"
+        },
+        "weather": {
+          "licence": "Open-Meteo archive (ERA5-based) \u2014 CC BY 4.0",
+          "scalars": {
+            "air_temp_max": 40.25,
+            "humidity_mean": 25.6,
+            "wind_speed_mean": 2.62,
+            "solar_radiation": 23.75,
+            "heat_index_c": 41.73,
+            "wet_bulb_c": 24.76
+          },
+          "n_days": 14
+        }
+      },
+      "skipped": [],
+      "notes": [
+        "OSM building features not collected (opt-in); the model does not use them."
+      ],
+      "n_cells": 9792,
+      "target_valid_cells": 9792,
+      "ward_kind": "2km_analysis_zones",
+      "lst_c": {
+        "mean": 43.8,
+        "std": 2.35
+      },
+      "features": [
+        "grid_id",
+        "row",
+        "col",
+        "centroid_lon",
+        "centroid_lat",
+        "lst_c",
+        "lst_std",
+        "n_scenes",
+        "ndvi_mean",
+        "ndvi_std",
+        "ndbi_mean",
+        "mndwi_mean",
+        "frac_impervious",
+        "frac_tree",
+        "frac_vegetation",
+        "frac_bare_soil",
+        "frac_water",
+        "elev_mean",
+        "slope_mean",
+        "building_density",
+        "building_height_mean",
+        "hospital_count",
+        "bus_stop_count",
+        "drinking_water_count",
+        "pop_total",
+        "pop_density",
+        "ndvi_mean_ctx3",
+        "ndvi_mean_ctx7",
+        "frac_impervious_ctx3",
+        "frac_impervious_ctx7",
+        "pop_density_ctx3",
+        "pop_density_ctx7",
+        "air_temp_max",
+        "humidity_mean",
+        "wind_speed_mean",
+        "solar_radiation",
+        "heat_index_c",
+        "wet_bulb_c",
+        "green_deficit",
+        "veg_imperv_ratio",
+        "ward_id",
+        "ward_name",
+        "tier",
+        "lst_mean",
+        "lst_max",
+        "delta_above_mean",
+        "priority_score"
+      ]
+    },
+    "mumbai": {
+      "city_id": "mumbai",
+      "built_at": "2026-10-10T10:04:11.212340+00:00",
+      "sources": {
+        "landsat": {
+          "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
+          "scenes": [
+            {
+              "id": "LC09_L2SP_148047_20240415_02_T1",
+              "date": "2024-04-15",
+              "platform": "landsat-9",
+              "cloud_cover": 0.04,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC08_L2SP_148047_20240407_02_T1",
+              "date": "2024-04-07",
+              "platform": "landsat-8",
+              "cloud_cover": 0.1,
+              "valid_frac": 0.989
+            },
+            {
+              "id": "LC08_L2SP_148047_20260413_02_T1",
+              "date": "2026-04-13",
+              "platform": "landsat-8",
+              "cloud_cover": 1.03,
+              "valid_frac": 0.993
+            },
+            {
+              "id": "LC09_L2SP_148047_20240501_02_T1",
+              "date": "2024-05-01",
+              "platform": "landsat-9",
+              "cloud_cover": 1.29,
+              "valid_frac": 0.997
+            },
+            {
+              "id": "LC09_L2SP_148047_20250418_02_T1",
+              "date": "2025-04-18",
+              "platform": "landsat-9",
+              "cloud_cover": 1.35,
+              "valid_frac": 0.99
+            },
+            {
+              "id": "LC08_L2SP_148047_20240423_02_T1",
+              "date": "2024-04-23",
+              "platform": "landsat-8",
+              "cloud_cover": 2.13,
+              "valid_frac": 0.626
+            },
+            {
+              "id": "LC09_L2SP_148047_20240517_02_T1",
+              "date": "2024-05-17",
+              "platform": "landsat-9",
+              "cloud_cover": 4.07,
+              "valid_frac": 0.944
+            },
+            {
+              "id": "LC08_L2SP_148047_20250410_02_T1",
+              "date": "2025-04-10",
+              "platform": "landsat-8",
+              "cloud_cover": 4.49,
+              "valid_frac": 0.609
+            },
+            {
+              "id": "LC08_L2SP_148047_20260429_02_T1",
+              "date": "2026-04-29",
+              "platform": "landsat-8",
+              "cloud_cover": 5.27,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC08_L2SP_148047_20240509_02_T1",
+              "date": "2024-05-09",
+              "platform": "landsat-8",
+              "cloud_cover": 5.32,
+              "valid_frac": 0.842
+            },
+            {
+              "id": "LC08_L2SP_148047_20250426_02_T1",
+              "date": "2025-04-26",
+              "platform": "landsat-8",
+              "cloud_cover": 7.82,
+              "valid_frac": 0.964
+            },
+            {
+              "id": "LC09_L2SP_148047_20260507_02_T1",
+              "date": "2026-05-07",
+              "platform": "landsat-9",
+              "cloud_cover": 9.1,
+              "valid_frac": 0.674
+            },
+            {
+              "id": "LC08_L2SP_148047_20260531_02_T1",
+              "date": "2026-05-31",
+              "platform": "landsat-8",
+              "cloud_cover": 9.26,
+              "valid_frac": 0.688
+            },
+            {
+              "id": "LC08_L2SP_148047_20260616_02_T1",
+              "date": "2026-06-16",
+              "platform": "landsat-8",
+              "cloud_cover": 10.19,
+              "valid_frac": 0.58
+            }
+          ]
+        },
+        "sentinel2": {
+          "licence": "Copernicus Sentinel-2 L2A \u2014 free and open (Copernicus licence)",
+          "n_scenes": 8
+        },
+        "landcover": {
+          "licence": "ESA WorldCover 2021 \u2014 CC BY 4.0"
+        },
+        "terrain": {
+          "licence": "Copernicus DEM GLO-30 \u2014 Copernicus licence (free use)"
+        },
+        "osm": {
+          "licence": "\u00a9 OpenStreetMap contributors \u2014 ODbL",
+          "tile_coverage": 0.0,
+          "n_buildings": 0
+        },
+        "population": {
+          "licence": "Meta High Resolution Population Density Maps (HRSL) \u2014 CC BY 4.0",
+          "source": "meta_hrsl_30m"
+        },
+        "weather": {
+          "licence": "Open-Meteo archive (ERA5-based) \u2014 CC BY 4.0",
+          "scalars": {
+            "air_temp_max": 34.01,
+            "humidity_mean": 69.2,
+            "wind_speed_mean": 2.83,
+            "solar_radiation": 24.55,
+            "heat_index_c": 46.44,
+            "wet_bulb_c": 29.2
+          },
+          "n_days": 14
+        }
+      },
+      "skipped": [],
+      "notes": [
+        "OSM building features not collected (opt-in); the model does not use them."
+      ],
+      "n_cells": 3864,
+      "target_valid_cells": 3864,
+      "ward_kind": "2km_analysis_zones",
+      "lst_c": {
+        "mean": 37.03,
+        "std": 5.51
+      },
+      "features": [
+        "grid_id",
+        "row",
+        "col",
+        "centroid_lon",
+        "centroid_lat",
+        "lst_c",
+        "lst_std",
+        "n_scenes",
+        "ndvi_mean",
+        "ndvi_std",
+        "ndbi_mean",
+        "mndwi_mean",
+        "frac_impervious",
+        "frac_tree",
+        "frac_vegetation",
+        "frac_bare_soil",
+        "frac_water",
+        "elev_mean",
+        "slope_mean",
+        "building_density",
+        "building_height_mean",
+        "hospital_count",
+        "bus_stop_count",
+        "drinking_water_count",
+        "pop_total",
+        "pop_density",
+        "ndvi_mean_ctx3",
+        "ndvi_mean_ctx7",
+        "frac_impervious_ctx3",
+        "frac_impervious_ctx7",
+        "pop_density_ctx3",
+        "pop_density_ctx7",
+        "air_temp_max",
+        "humidity_mean",
+        "wind_speed_mean",
+        "solar_radiation",
+        "heat_index_c",
+        "wet_bulb_c",
+        "green_deficit",
+        "veg_imperv_ratio",
+        "ward_id",
+        "ward_name",
+        "tier",
+        "lst_mean",
+        "lst_max",
+        "delta_above_mean",
+        "priority_score"
+      ]
+    },
+    "jaipur": {
+      "city_id": "jaipur",
+      "built_at": "2026-10-10T10:04:52.057239+00:00",
+      "sources": {
+        "landsat": {
+          "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
+          "scenes": [
+            {
+              "id": "LC08_L2SP_147041_20240603_02_T1",
+              "date": "2024-06-03",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC09_L2SP_147042_20240526_02_T1",
+              "date": "2024-05-26",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.31
+            },
+            {
+              "id": "LC09_L2SP_147041_20240526_02_T1",
+              "date": "2024-05-26",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC09_L2SP_147042_20240424_02_T1",
+              "date": "2024-04-24",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.33
+            },
+            {
+              "id": "LC09_L2SP_147041_20240424_02_T1",
+              "date": "2024-04-24",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC09_L2SP_147041_20240408_02_T1",
+              "date": "2024-04-08",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC08_L2SP_147042_20250521_02_T1",
+              "date": "2025-05-21",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.323
+            },
+            {
+              "id": "LC08_L2SP_147041_20250521_02_T1",
+              "date": "2025-05-21",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC09_L2SP_147042_20250427_02_T1",
+              "date": "2025-04-27",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.297
+            },
+            {
+              "id": "LC08_L2SP_147042_20250419_02_T1",
+              "date": "2025-04-19",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.316
+            },
+            {
+              "id": "LC08_L2SP_147041_20250419_02_T1",
+              "date": "2025-04-19",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC08_L2SP_147042_20260609_02_T1",
+              "date": "2026-06-09",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.339
+            },
+            {
+              "id": "LC08_L2SP_147041_20260609_02_T1",
+              "date": "2026-06-09",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC09_L2SP_147042_20260516_02_T1",
+              "date": "2026-05-16",
+              "platform": "landsat-9",
+              "cloud_cover": 0.0,
+              "valid_frac": 0.306
+            }
+          ]
+        },
+        "sentinel2": {
+          "licence": "Copernicus Sentinel-2 L2A \u2014 free and open (Copernicus licence)",
+          "n_scenes": 8
+        },
+        "landcover": {
+          "licence": "ESA WorldCover 2021 \u2014 CC BY 4.0"
+        },
+        "terrain": {
+          "licence": "Copernicus DEM GLO-30 \u2014 Copernicus licence (free use)"
+        },
+        "osm": {
+          "licence": "\u00a9 OpenStreetMap contributors \u2014 ODbL",
+          "tile_coverage": 0.0,
+          "n_buildings": 0
+        },
+        "population": {
+          "licence": "Meta High Resolution Population Density Maps (HRSL) \u2014 CC BY 4.0",
+          "source": "meta_hrsl_30m"
+        },
+        "weather": {
+          "licence": "Open-Meteo archive (ERA5-based) \u2014 CC BY 4.0",
+          "scalars": {
+            "air_temp_max": 40.92,
+            "humidity_mean": 21.6,
+            "wind_speed_mean": 2.89,
+            "solar_radiation": 23.59,
+            "heat_index_c": 41.28,
+            "wet_bulb_c": 23.89
+          },
+          "n_days": 9
+        }
+      },
+      "skipped": [],
+      "notes": [
+        "OSM building features not collected (opt-in); the model does not use them."
+      ],
+      "n_cells": 1800,
+      "target_valid_cells": 1800,
+      "ward_kind": "2km_analysis_zones",
+      "lst_c": {
+        "mean": 48.15,
+        "std": 2.47
+      },
+      "features": [
+        "grid_id",
+        "row",
+        "col",
+        "centroid_lon",
+        "centroid_lat",
+        "lst_c",
+        "lst_std",
+        "n_scenes",
+        "ndvi_mean",
+        "ndvi_std",
+        "ndbi_mean",
+        "mndwi_mean",
+        "frac_impervious",
+        "frac_tree",
+        "frac_vegetation",
+        "frac_bare_soil",
+        "frac_water",
+        "elev_mean",
+        "slope_mean",
+        "building_density",
+        "building_height_mean",
+        "hospital_count",
+        "bus_stop_count",
+        "drinking_water_count",
+        "pop_total",
+        "pop_density",
+        "ndvi_mean_ctx3",
+        "ndvi_mean_ctx7",
+        "frac_impervious_ctx3",
+        "frac_impervious_ctx7",
+        "pop_density_ctx3",
+        "pop_density_ctx7",
+        "air_temp_max",
+        "humidity_mean",
+        "wind_speed_mean",
+        "solar_radiation",
+        "heat_index_c",
+        "wet_bulb_c",
+        "green_deficit",
+        "veg_imperv_ratio",
+        "ward_id",
+        "ward_name",
+        "tier",
+        "lst_mean",
+        "lst_max",
+        "delta_above_mean",
+        "priority_score"
+      ]
+    },
+    "bengaluru": {
+      "city_id": "bengaluru",
+      "built_at": "2026-10-10T10:05:13.770034+00:00",
+      "sources": {
+        "landsat": {
+          "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
+          "scenes": [
+            {
+              "id": "LC08_L2SP_144051_20240427_02_T1",
+              "date": "2024-04-27",
+              "platform": "landsat-8",
+              "cloud_cover": 0.0,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC09_L2SP_144051_20240505_02_T1",
+              "date": "2024-05-05",
+              "platform": "landsat-9",
+              "cloud_cover": 0.02,
+              "valid_frac": 0.994
+            },
+            {
+              "id": "LC08_L2SP_144051_20240411_02_T1",
+              "date": "2024-04-11",
+              "platform": "landsat-8",
+              "cloud_cover": 0.15,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC08_L2SP_144051_20260401_02_T1",
+              "date": "2026-04-01",
+              "platform": "landsat-8",
+              "cloud_cover": 0.23,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC08_L2SP_144051_20250414_02_T1",
+              "date": "2025-04-14",
+              "platform": "landsat-8",
+              "cloud_cover": 0.92,
+              "valid_frac": 0.997
+            },
+            {
+              "id": "LC09_L2SP_144051_20250422_02_T1",
+              "date": "2025-04-22",
+              "platform": "landsat-9",
+              "cloud_cover": 1.33,
+              "valid_frac": 0.999
+            },
+            {
+              "id": "LC09_L2SP_144051_20240403_02_T1",
+              "date": "2024-04-03",
+              "platform": "landsat-9",
+              "cloud_cover": 2.06,
+              "valid_frac": 1.0
+            },
+            {
+              "id": "LC09_L2SP_144051_20250508_02_T1",
+              "date": "2025-05-08",
+              "platform": "landsat-9",
+              "cloud_cover": 5.73,
+              "valid_frac": 0.919
+            },
+            {
+              "id": "LC09_L2SP_144051_20260409_02_T1",
+              "date": "2026-04-09",
+              "platform": "landsat-9",
+              "cloud_cover": 6.69,
+              "valid_frac": 0.992
+            },
+            {
+              "id": "LC08_L2SP_144051_20260417_02_T1",
+              "date": "2026-04-17",
+              "platform": "landsat-8",
+              "cloud_cover": 9.82,
+              "valid_frac": 0.651
+            },
+            {
+              "id": "LC09_L2SP_144051_20250406_02_T1",
+              "date": "2025-04-06",
+              "platform": "landsat-9",
+              "cloud_cover": 12.11,
+              "valid_frac": 0.322
+            },
+            {
+              "id": "LC08_L2SP_144051_20260604_02_T1",
+              "date": "2026-06-04",
+              "platform": "landsat-8",
+              "cloud_cover": 14.37,
+              "valid_frac": 0.886
+            },
+            {
+              "id": "LC08_L2SP_144051_20260503_02_T1",
+              "date": "2026-05-03",
+              "platform": "landsat-8",
+              "cloud_cover": 14.38,
+              "valid_frac": 0.997
+            },
+            {
+              "id": "LC08_L2SP_144051_20250430_02_T1",
+              "date": "2025-04-30",
+              "platform": "landsat-8",
+              "cloud_cover": 15.3,
+              "valid_frac": 0.94
+            }
+          ]
+        },
+        "sentinel2": {
+          "licence": "Copernicus Sentinel-2 L2A \u2014 free and open (Copernicus licence)",
+          "n_scenes": 8
+        },
+        "landcover": {
+          "licence": "ESA WorldCover 2021 \u2014 CC BY 4.0"
+        },
+        "terrain": {
+          "licence": "Copernicus DEM GLO-30 \u2014 Copernicus licence (free use)"
+        },
+        "osm": {
+          "licence": "\u00a9 OpenStreetMap contributors \u2014 ODbL",
+          "tile_coverage": 0.0,
+          "n_buildings": 0
+        },
+        "population": {
+          "licence": "Meta High Resolution Population Density Maps (HRSL) \u2014 CC BY 4.0",
+          "source": "meta_hrsl_30m"
+        },
+        "weather": {
+          "licence": "Open-Meteo archive (ERA5-based) \u2014 CC BY 4.0",
+          "scalars": {
+            "air_temp_max": 34.41,
+            "humidity_mean": 49.1,
+            "wind_speed_mean": 2.65,
+            "solar_radiation": 24.76,
+            "heat_index_c": 38.99,
+            "wet_bulb_c": 25.91
+          },
+          "n_days": 14
+        }
+      },
+      "skipped": [],
+      "notes": [
+        "OSM building features not collected (opt-in); the model does not use them."
+      ],
+      "n_cells": 4225,
+      "target_valid_cells": 4225,
+      "ward_kind": "2km_analysis_zones",
+      "lst_c": {
+        "mean": 40.32,
+        "std": 2.02
+      },
+      "features": [
+        "grid_id",
+        "row",
+        "col",
+        "centroid_lon",
+        "centroid_lat",
+        "lst_c",
+        "lst_std",
+        "n_scenes",
+        "ndvi_mean",
+        "ndvi_std",
+        "ndbi_mean",
+        "mndwi_mean",
+        "frac_impervious",
+        "frac_tree",
+        "frac_vegetation",
+        "frac_bare_soil",
+        "frac_water",
+        "elev_mean",
+        "slope_mean",
+        "building_density",
+        "building_height_mean",
+        "hospital_count",
+        "bus_stop_count",
+        "drinking_water_count",
+        "pop_total",
+        "pop_density",
+        "ndvi_mean_ctx3",
+        "ndvi_mean_ctx7",
+        "frac_impervious_ctx3",
+        "frac_impervious_ctx7",
+        "pop_density_ctx3",
+        "pop_density_ctx7",
+        "air_temp_max",
+        "humidity_mean",
+        "wind_speed_mean",
+        "solar_radiation",
+        "heat_index_c",
+        "wet_bulb_c",
+        "green_deficit",
+        "veg_imperv_ratio",
+        "ward_id",
+        "ward_name",
+        "tier",
+        "lst_mean",
+        "lst_max",
+        "delta_above_mean",
+        "priority_score"
+      ]
+    }
+  }
+}

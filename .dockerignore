@@ -1,0 +1,8 @@
+frontend
+data/raw
+data/runtime
+.git
+.venv
+venv
+**/__pycache__
+.aws-sam
