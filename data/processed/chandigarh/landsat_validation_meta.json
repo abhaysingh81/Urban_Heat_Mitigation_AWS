@@ -1,0 +1,15 @@
+{
+  "city_id": "chandigarh",
+  "scene_id": "LC08_L2SP_147039_20260422_02_T1",
+  "scene_datetime": "2026-04-22T05:24:09.735765Z",
+  "cloud_cover_pct": 0.01,
+  "platform": "landsat-8",
+  "cells_covered": 986,
+  "total_cells": 986,
+  "validation": {
+    "rmse_c": 3.3,
+    "mae_c": 2.63,
+    "correlation": -0.153
+  },
+  "fetched_at": "2026-06-22T03:11:42.891995Z"
+}
