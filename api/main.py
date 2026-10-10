@@ -4,11 +4,12 @@ FastAPI application entrypoint for the Urban Heat MVP.
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 import pandas as pd
 
-from pipeline.config import CITIES, DEFAULT_CITY, list_cities, city_features_file, PROCESSED_DIR
+from pipeline.config import data_version, CITIES, DEFAULT_CITY, list_cities, city_features_file, PROCESSED_DIR
 from api.deps import get_city_id
-from api.routers import grid, hotspots, drivers, scenarios, risk, plans, brief, reports, meta
+from api.routers import grid, hotspots, drivers, scenarios, risk, plans, brief, reports, meta, lab
 from api import aws
 from api.data_source import read_features, data_kind
 import os
@@ -34,6 +35,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Compress large responses (city grids are several MB of GeoJSON; Lambda caps responses at 6 MB)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # Include routers
 app.include_router(grid.router)
 app.include_router(hotspots.router)
@@ -44,6 +48,7 @@ app.include_router(plans.router)
 app.include_router(brief.router)
 app.include_router(reports.router)
 app.include_router(meta.router)
+app.include_router(lab.router)
 
 
 @app.middleware("http")
@@ -97,7 +102,7 @@ async def get_overview(city_id: str = Depends(get_city_id)):
     if data_kind(city_id) == "real":
         from api.routers.scenarios import _real_presets
         from pipeline.config import city_real_features_file
-        presets = [p for p in _real_presets(city_id, city_real_features_file(city_id).stat().st_mtime)
+        presets = [p for p in _real_presets(city_id, data_version(city_id))
                    if p["interventions"]]
         if presets:
             best = max(presets, key=lambda p: p["cost_efficiency"])

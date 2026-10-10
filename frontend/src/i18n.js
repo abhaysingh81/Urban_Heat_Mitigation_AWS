@@ -5,8 +5,8 @@ import { createContext, useContext } from 'react';
 // any official use.
 const STRINGS = {
   en: {
-    nav_heat_map: 'Heat Map', nav_drivers: 'Heat Drivers', nav_scenarios: 'Scenarios',
-    nav_risk: 'Ward Risk', nav_plan: 'Action Plan', nav_model: 'Model Card', nav_citizen: 'Citizen View',
+    nav_heat_map: 'Heat Map', nav_drivers: 'Heat Drivers', nav_scenarios: 'Scenario Lab',
+    nav_risk: 'Ward Risk', nav_plan: 'Action Plan', nav_planner: 'Ward Planner', nav_model: 'Model Card', nav_citizen: 'Citizen View',
     language: 'Language', preview_banner: 'Synthetic preview — illustrative data, not real measurements.',
     real_badge: 'Real satellite data',
     risk_title: 'Which wards need help first?', risk_sub: 'Risk = heat × people exposed × vulnerability. A relative ranking, not a prediction of harm.',
@@ -32,7 +32,7 @@ const STRINGS = {
   },
   hi: {
     nav_heat_map: 'गर्मी का नक्शा', nav_drivers: 'गर्मी के कारण', nav_scenarios: 'परिदृश्य',
-    nav_risk: 'वार्ड जोखिम', nav_plan: 'कार्य योजना', nav_model: 'मॉडल कार्ड', nav_citizen: 'नागरिक दृश्य',
+    nav_risk: 'वार्ड जोखिम', nav_plan: 'कार्य योजना', nav_planner: 'वार्ड योजनाकार', nav_model: 'मॉडल कार्ड', nav_citizen: 'नागरिक दृश्य',
     language: 'भाषा', preview_banner: 'नकली पूर्वावलोकन — उदाहरण डेटा, असली माप नहीं।',
     real_badge: 'असली उपग्रह डेटा',
     risk_title: 'किन वार्डों को सबसे पहले मदद चाहिए?', risk_sub: 'जोखिम = गर्मी × प्रभावित लोग × कमज़ोरी। यह तुलनात्मक क्रम है, नुकसान का पूर्वानुमान नहीं।',

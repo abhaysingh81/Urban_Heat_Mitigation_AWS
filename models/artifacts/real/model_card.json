@@ -1,6 +1,6 @@
 {
   "model_version": "real-v1-20261010",
-  "trained_at": "2026-10-10T10:06:35.778428+00:00",
+  "trained_at": "2026-10-10T17:21:53.223981+00:00",
   "target": "Landsat 8/9 C2 L2 ST_B10 median composite (\u00b0C), Apr\u2013Jun 2024\u20132026",
   "cities": [
     "bengaluru",
@@ -8,7 +8,7 @@
     "mumbai",
     "new_delhi"
   ],
-  "n_cells": 19681,
+  "n_cells": 25588,
   "shipped_variant": "spatial+weather",
   "features": [
     "frac_impervious",
@@ -64,41 +64,41 @@
       ],
       "leave_one_city_out": {
         "new_delhi": {
-          "n": 9792,
-          "r2": 0.522,
-          "rmse": 1.623,
-          "mae": 1.276,
-          "pearson_r": 0.811,
-          "bias": 0.068
+          "n": 13320,
+          "r2": 0.646,
+          "rmse": 1.665,
+          "mae": 1.304,
+          "pearson_r": 0.839,
+          "bias": 0.375
         },
         "mumbai": {
           "n": 3864,
-          "r2": 0.829,
-          "rmse": 2.279,
-          "mae": 1.918,
-          "pearson_r": 0.948,
-          "bias": 0.96
+          "r2": 0.499,
+          "rmse": 3.899,
+          "mae": 3.008,
+          "pearson_r": 0.856,
+          "bias": 2.134
         },
         "jaipur": {
-          "n": 1800,
-          "r2": -4.641,
-          "rmse": 5.856,
-          "mae": 5.595,
-          "pearson_r": 0.734,
-          "bias": -5.594
+          "n": 2928,
+          "r2": -1.434,
+          "rmse": 4.126,
+          "mae": 3.87,
+          "pearson_r": 0.848,
+          "bias": -3.858
         },
         "bengaluru": {
-          "n": 4225,
-          "r2": -6.238,
-          "rmse": 5.434,
-          "mae": 5.278,
-          "pearson_r": 0.832,
-          "bias": 5.277
+          "n": 5476,
+          "r2": -5.108,
+          "rmse": 5.219,
+          "mae": 5.033,
+          "pearson_r": 0.81,
+          "bias": 5.032
         }
       },
       "baseline_global_mean": {
         "new_delhi": {
-          "n": 9792,
+          "n": 13320,
           "r2": null,
           "rmse": null,
           "mae": null,
@@ -114,7 +114,7 @@
           "bias": null
         },
         "jaipur": {
-          "n": 1800,
+          "n": 2928,
           "r2": null,
           "rmse": null,
           "mae": null,
@@ -122,7 +122,7 @@
           "bias": null
         },
         "bengaluru": {
-          "n": 4225,
+          "n": 5476,
           "r2": null,
           "rmse": null,
           "mae": null,
@@ -132,36 +132,36 @@
       },
       "baseline_linear_ndvi_impervious": {
         "new_delhi": {
-          "n": 9792,
-          "r2": -2.605,
-          "rmse": 4.456,
-          "mae": 3.419,
-          "pearson_r": -0.306,
-          "bias": -2.702
+          "n": 13320,
+          "r2": -2.033,
+          "rmse": 4.874,
+          "mae": 3.816,
+          "pearson_r": -0.528,
+          "bias": -3.016
         },
         "mumbai": {
           "n": 3864,
-          "r2": -4.765,
-          "rmse": 13.225,
-          "mae": 9.352,
-          "pearson_r": -0.687,
-          "bias": 9.003
+          "r2": -5.784,
+          "rmse": 14.346,
+          "mae": 10.087,
+          "pearson_r": -0.696,
+          "bias": 9.798
         },
         "jaipur": {
-          "n": 1800,
-          "r2": -7.519,
-          "rmse": 7.197,
-          "mae": 6.566,
-          "pearson_r": -0.273,
-          "bias": -6.542
+          "n": 2928,
+          "r2": -6.588,
+          "rmse": 7.286,
+          "mae": 6.738,
+          "pearson_r": -0.478,
+          "bias": -6.702
         },
         "bengaluru": {
-          "n": 4225,
-          "r2": -3.803,
-          "rmse": 4.427,
-          "mae": 3.779,
-          "pearson_r": -0.486,
-          "bias": 3.265
+          "n": 5476,
+          "r2": -3.718,
+          "rmse": 4.587,
+          "mae": 3.945,
+          "pearson_r": -0.557,
+          "bias": 3.799
         }
       }
     },
@@ -196,41 +196,41 @@
       ],
       "leave_one_city_out": {
         "new_delhi": {
-          "n": 9792,
-          "r2": -0.043,
-          "rmse": 2.397,
-          "mae": 2.061,
-          "pearson_r": 0.79,
-          "bias": -1.917
+          "n": 13320,
+          "r2": 0.187,
+          "rmse": 2.523,
+          "mae": 2.09,
+          "pearson_r": 0.823,
+          "bias": -1.923
         },
         "mumbai": {
           "n": 3864,
-          "r2": 0.593,
-          "rmse": 3.513,
-          "mae": 3.0,
-          "pearson_r": 0.885,
-          "bias": 0.123
+          "r2": 0.487,
+          "rmse": 3.944,
+          "mae": 3.157,
+          "pearson_r": 0.821,
+          "bias": 1.253
         },
         "jaipur": {
-          "n": 1800,
-          "r2": -1.147,
-          "rmse": 3.613,
-          "mae": 3.27,
-          "pearson_r": 0.721,
-          "bias": -3.165
+          "n": 2928,
+          "r2": -0.343,
+          "rmse": 3.065,
+          "mae": 2.766,
+          "pearson_r": 0.818,
+          "bias": -2.651
         },
         "bengaluru": {
-          "n": 4225,
-          "r2": -2.744,
-          "rmse": 3.909,
-          "mae": 3.701,
-          "pearson_r": 0.804,
-          "bias": 3.697
+          "n": 5476,
+          "r2": -2.437,
+          "rmse": 3.915,
+          "mae": 3.662,
+          "pearson_r": 0.775,
+          "bias": 3.651
         }
       },
       "baseline_global_mean": {
         "new_delhi": {
-          "n": 9792,
+          "n": 13320,
           "r2": null,
           "rmse": null,
           "mae": null,
@@ -246,7 +246,7 @@
           "bias": null
         },
         "jaipur": {
-          "n": 1800,
+          "n": 2928,
           "r2": null,
           "rmse": null,
           "mae": null,
@@ -254,7 +254,7 @@
           "bias": null
         },
         "bengaluru": {
-          "n": 4225,
+          "n": 5476,
           "r2": null,
           "rmse": null,
           "mae": null,
@@ -264,36 +264,36 @@
       },
       "baseline_linear_ndvi_impervious": {
         "new_delhi": {
-          "n": 9792,
-          "r2": -2.605,
-          "rmse": 4.456,
-          "mae": 3.419,
-          "pearson_r": -0.306,
-          "bias": -2.702
+          "n": 13320,
+          "r2": -2.033,
+          "rmse": 4.874,
+          "mae": 3.816,
+          "pearson_r": -0.528,
+          "bias": -3.016
         },
         "mumbai": {
           "n": 3864,
-          "r2": -4.765,
-          "rmse": 13.225,
-          "mae": 9.352,
-          "pearson_r": -0.687,
-          "bias": 9.003
+          "r2": -5.784,
+          "rmse": 14.346,
+          "mae": 10.087,
+          "pearson_r": -0.696,
+          "bias": 9.798
         },
         "jaipur": {
-          "n": 1800,
-          "r2": -7.519,
-          "rmse": 7.197,
-          "mae": 6.566,
-          "pearson_r": -0.273,
-          "bias": -6.542
+          "n": 2928,
+          "r2": -6.588,
+          "rmse": 7.286,
+          "mae": 6.738,
+          "pearson_r": -0.478,
+          "bias": -6.702
         },
         "bengaluru": {
-          "n": 4225,
-          "r2": -3.803,
-          "rmse": 4.427,
-          "mae": 3.779,
-          "pearson_r": -0.486,
-          "bias": 3.265
+          "n": 5476,
+          "r2": -3.718,
+          "rmse": 4.587,
+          "mae": 3.945,
+          "pearson_r": -0.557,
+          "bias": 3.799
         }
       }
     }
@@ -301,93 +301,93 @@
   "block_cv_5km": {
     "per_city": {
       "new_delhi": {
-        "n": 9792,
-        "r2": 0.796,
-        "rmse": 1.06,
-        "mae": 0.791,
-        "pearson_r": 0.892,
-        "bias": 0.017
+        "n": 13320,
+        "r2": 0.818,
+        "rmse": 1.193,
+        "mae": 0.886,
+        "pearson_r": 0.905,
+        "bias": 0.014
       },
       "mumbai": {
         "n": 3864,
-        "r2": 0.958,
-        "rmse": 1.129,
-        "mae": 0.812,
-        "pearson_r": 0.979,
-        "bias": 0.037
+        "r2": 0.956,
+        "rmse": 1.156,
+        "mae": 0.778,
+        "pearson_r": 0.978,
+        "bias": -0.099
       },
       "jaipur": {
-        "n": 1800,
-        "r2": 0.773,
-        "rmse": 1.175,
-        "mae": 0.861,
-        "pearson_r": 0.879,
-        "bias": -0.01
+        "n": 2928,
+        "r2": 0.807,
+        "rmse": 1.162,
+        "mae": 0.891,
+        "pearson_r": 0.898,
+        "bias": 0.003
       },
       "bengaluru": {
-        "n": 4225,
-        "r2": 0.803,
-        "rmse": 0.897,
-        "mae": 0.679,
-        "pearson_r": 0.896,
-        "bias": 0.043
+        "n": 5476,
+        "r2": 0.794,
+        "rmse": 0.958,
+        "mae": 0.697,
+        "pearson_r": 0.891,
+        "bias": 0.027
       }
     },
     "q10_q90_coverage": {
-      "new_delhi": 0.728,
-      "mumbai": 0.591,
-      "jaipur": 0.633,
-      "bengaluru": 0.694
+      "new_delhi": 0.741,
+      "mumbai": 0.654,
+      "jaipur": 0.697,
+      "bengaluru": 0.739
     },
     "calibrated_coverage": {
-      "new_delhi": 0.827,
-      "mumbai": 0.738,
-      "jaipur": 0.746,
-      "bengaluru": 0.817
+      "new_delhi": 0.807,
+      "mumbai": 0.775,
+      "jaipur": 0.78,
+      "bengaluru": 0.812
     },
-    "band_widen_c": 0.25,
+    "band_widen_c": 0.17,
     "nominal_coverage": 0.8
   },
   "top_drivers_shap": [
     {
-      "feature": "frac_water",
-      "mean_abs_shap": 1.2282
-    },
-    {
       "feature": "ndbi_mean",
-      "mean_abs_shap": 1.201
+      "mean_abs_shap": 1.3398
     },
     {
       "feature": "air_temp_max",
-      "mean_abs_shap": 0.8178
+      "mean_abs_shap": 1.0518
+    },
+    {
+      "feature": "frac_water",
+      "mean_abs_shap": 0.781
     },
     {
       "feature": "mndwi_mean",
-      "mean_abs_shap": 0.5699
+      "mean_abs_shap": 0.6882
     },
     {
       "feature": "elev_mean",
-      "mean_abs_shap": 0.4606
+      "mean_abs_shap": 0.4829
+    },
+    {
+      "feature": "ndvi_mean_ctx7",
+      "mean_abs_shap": 0.28
     },
     {
       "feature": "ndvi_mean",
-      "mean_abs_shap": 0.2349
-    },
-    {
-      "feature": "ndvi_mean_ctx3",
-      "mean_abs_shap": 0.1792
+      "mean_abs_shap": 0.2454
     },
     {
       "feature": "humidity_mean",
-      "mean_abs_shap": 0.1628
+      "mean_abs_shap": 0.2342
     },
     {
       "feature": "frac_tree",
-      "mean_abs_shap": 0.1589
+      "mean_abs_shap": 0.2011
     },
     {
-      "feature": "slope_mean",
-      "mean_abs_shap": 0.1201
+      "feature": "ndvi_mean_ctx3",
+      "mean_abs_shap": 0.1715
     }
   ],
   "quality_gate": {
@@ -408,7 +408,7 @@
   "data_cards": {
     "new_delhi": {
       "city_id": "new_delhi",
-      "built_at": "2026-10-10T10:02:33.507555+00:00",
+      "built_at": "2026-10-10T17:14:09.524405+00:00",
       "sources": {
         "landsat": {
           "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
@@ -418,98 +418,98 @@
               "date": "2024-06-03",
               "platform": "landsat-8",
               "cloud_cover": 0.0,
-              "valid_frac": 0.646
+              "valid_frac": 0.72
             },
             {
               "id": "LC09_L2SP_147040_20240526_02_T1",
               "date": "2024-05-26",
               "platform": "landsat-9",
               "cloud_cover": 0.0,
-              "valid_frac": 0.638
+              "valid_frac": 0.714
             },
             {
               "id": "LC08_L2SP_147040_20240518_02_T1",
               "date": "2024-05-18",
               "platform": "landsat-8",
               "cloud_cover": 0.0,
-              "valid_frac": 0.627
+              "valid_frac": 0.705
             },
             {
               "id": "LC09_L2SP_147040_20240424_02_T1",
               "date": "2024-04-24",
               "platform": "landsat-9",
               "cloud_cover": 0.0,
-              "valid_frac": 0.685
+              "valid_frac": 0.751
             },
             {
               "id": "LC09_L2SP_147040_20240408_02_T1",
               "date": "2024-04-08",
               "platform": "landsat-9",
               "cloud_cover": 0.0,
-              "valid_frac": 0.574
+              "valid_frac": 0.662
             },
             {
               "id": "LC08_L2SP_147040_20250521_02_T1",
               "date": "2025-05-21",
               "platform": "landsat-8",
               "cloud_cover": 0.0,
-              "valid_frac": 0.646
+              "valid_frac": 0.721
             },
             {
               "id": "LC08_L2SP_147040_20250403_02_T1",
               "date": "2025-04-03",
               "platform": "landsat-8",
               "cloud_cover": 0.0,
-              "valid_frac": 0.615
+              "valid_frac": 0.696
             },
             {
               "id": "LC08_L2SP_147040_20260609_02_T1",
               "date": "2026-06-09",
               "platform": "landsat-8",
               "cloud_cover": 0.0,
-              "valid_frac": 0.683
+              "valid_frac": 0.749
             },
             {
               "id": "LC09_L2SP_146040_20260423_02_T1",
               "date": "2026-04-23",
               "platform": "landsat-9",
               "cloud_cover": 0.0,
-              "valid_frac": 1.0
+              "valid_frac": 0.974
             },
             {
               "id": "LC08_L2SP_146040_20260415_02_T1",
               "date": "2026-04-15",
               "platform": "landsat-8",
               "cloud_cover": 0.0,
-              "valid_frac": 1.0
+              "valid_frac": 0.969
             },
             {
               "id": "LC09_L2SP_147040_20260414_02_T1",
               "date": "2026-04-14",
               "platform": "landsat-9",
               "cloud_cover": 0.0,
-              "valid_frac": 0.619
+              "valid_frac": 0.698
             },
             {
               "id": "LC09_L2SP_146040_20250404_02_T1",
               "date": "2025-04-04",
               "platform": "landsat-9",
               "cloud_cover": 0.01,
-              "valid_frac": 0.999
+              "valid_frac": 0.935
             },
             {
               "id": "LC08_L2SP_147040_20260422_02_T1",
               "date": "2026-04-22",
               "platform": "landsat-8",
               "cloud_cover": 0.01,
-              "valid_frac": 0.56
+              "valid_frac": 0.651
             },
             {
               "id": "LC09_L2SP_147040_20260617_02_T1",
               "date": "2026-06-17",
               "platform": "landsat-9",
               "cloud_cover": 0.02,
-              "valid_frac": 0.664
+              "valid_frac": 0.734
             }
           ]
         },
@@ -549,12 +549,12 @@
       "notes": [
         "OSM building features not collected (opt-in); the model does not use them."
       ],
-      "n_cells": 9792,
-      "target_valid_cells": 9792,
+      "n_cells": 13320,
+      "target_valid_cells": 13320,
       "ward_kind": "2km_analysis_zones",
       "lst_c": {
-        "mean": 43.8,
-        "std": 2.35
+        "mean": 44.61,
+        "std": 2.8
       },
       "features": [
         "grid_id",
@@ -808,7 +808,7 @@
     },
     "jaipur": {
       "city_id": "jaipur",
-      "built_at": "2026-10-10T10:04:52.057239+00:00",
+      "built_at": "2026-10-10T17:11:12.967772+00:00",
       "sources": {
         "landsat": {
           "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
@@ -825,7 +825,7 @@
               "date": "2024-05-26",
               "platform": "landsat-9",
               "cloud_cover": 0.0,
-              "valid_frac": 0.31
+              "valid_frac": 0.374
             },
             {
               "id": "LC09_L2SP_147041_20240526_02_T1",
@@ -839,7 +839,7 @@
               "date": "2024-04-24",
               "platform": "landsat-9",
               "cloud_cover": 0.0,
-              "valid_frac": 0.33
+              "valid_frac": 0.389
             },
             {
               "id": "LC09_L2SP_147041_20240424_02_T1",
@@ -860,7 +860,7 @@
               "date": "2025-05-21",
               "platform": "landsat-8",
               "cloud_cover": 0.0,
-              "valid_frac": 0.323
+              "valid_frac": 0.384
             },
             {
               "id": "LC08_L2SP_147041_20250521_02_T1",
@@ -874,14 +874,14 @@
               "date": "2025-04-27",
               "platform": "landsat-9",
               "cloud_cover": 0.0,
-              "valid_frac": 0.297
+              "valid_frac": 0.365
             },
             {
               "id": "LC08_L2SP_147042_20250419_02_T1",
               "date": "2025-04-19",
               "platform": "landsat-8",
               "cloud_cover": 0.0,
-              "valid_frac": 0.316
+              "valid_frac": 0.378
             },
             {
               "id": "LC08_L2SP_147041_20250419_02_T1",
@@ -895,7 +895,7 @@
               "date": "2026-06-09",
               "platform": "landsat-8",
               "cloud_cover": 0.0,
-              "valid_frac": 0.339
+              "valid_frac": 0.395
             },
             {
               "id": "LC08_L2SP_147041_20260609_02_T1",
@@ -909,7 +909,7 @@
               "date": "2026-05-16",
               "platform": "landsat-9",
               "cloud_cover": 0.0,
-              "valid_frac": 0.306
+              "valid_frac": 0.371
             }
           ]
         },
@@ -949,12 +949,12 @@
       "notes": [
         "OSM building features not collected (opt-in); the model does not use them."
       ],
-      "n_cells": 1800,
-      "target_valid_cells": 1800,
+      "n_cells": 2928,
+      "target_valid_cells": 2928,
       "ward_kind": "2km_analysis_zones",
       "lst_c": {
-        "mean": 48.15,
-        "std": 2.47
+        "mean": 48.95,
+        "std": 2.65
       },
       "features": [
         "grid_id",
@@ -1008,7 +1008,7 @@
     },
     "bengaluru": {
       "city_id": "bengaluru",
-      "built_at": "2026-10-10T10:05:13.770034+00:00",
+      "built_at": "2026-10-10T17:16:00.611232+00:00",
       "sources": {
         "landsat": {
           "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
@@ -1025,7 +1025,7 @@
               "date": "2024-05-05",
               "platform": "landsat-9",
               "cloud_cover": 0.02,
-              "valid_frac": 0.994
+              "valid_frac": 0.995
             },
             {
               "id": "LC08_L2SP_144051_20240411_02_T1",
@@ -1046,7 +1046,7 @@
               "date": "2025-04-14",
               "platform": "landsat-8",
               "cloud_cover": 0.92,
-              "valid_frac": 0.997
+              "valid_frac": 0.998
             },
             {
               "id": "LC09_L2SP_144051_20250422_02_T1",
@@ -1067,35 +1067,35 @@
               "date": "2025-05-08",
               "platform": "landsat-9",
               "cloud_cover": 5.73,
-              "valid_frac": 0.919
+              "valid_frac": 0.918
             },
             {
               "id": "LC09_L2SP_144051_20260409_02_T1",
               "date": "2026-04-09",
               "platform": "landsat-9",
               "cloud_cover": 6.69,
-              "valid_frac": 0.992
+              "valid_frac": 0.972
             },
             {
               "id": "LC08_L2SP_144051_20260417_02_T1",
               "date": "2026-04-17",
               "platform": "landsat-8",
               "cloud_cover": 9.82,
-              "valid_frac": 0.651
+              "valid_frac": 0.605
             },
             {
               "id": "LC09_L2SP_144051_20250406_02_T1",
               "date": "2025-04-06",
               "platform": "landsat-9",
               "cloud_cover": 12.11,
-              "valid_frac": 0.322
+              "valid_frac": 0.304
             },
             {
               "id": "LC08_L2SP_144051_20260604_02_T1",
               "date": "2026-06-04",
               "platform": "landsat-8",
               "cloud_cover": 14.37,
-              "valid_frac": 0.886
+              "valid_frac": 0.879
             },
             {
               "id": "LC08_L2SP_144051_20260503_02_T1",
@@ -1109,7 +1109,7 @@
               "date": "2025-04-30",
               "platform": "landsat-8",
               "cloud_cover": 15.3,
-              "valid_frac": 0.94
+              "valid_frac": 0.948
             }
           ]
         },
@@ -1149,12 +1149,12 @@
       "notes": [
         "OSM building features not collected (opt-in); the model does not use them."
       ],
-      "n_cells": 4225,
-      "target_valid_cells": 4225,
+      "n_cells": 5476,
+      "target_valid_cells": 5476,
       "ward_kind": "2km_analysis_zones",
       "lst_c": {
-        "mean": 40.32,
-        "std": 2.02
+        "mean": 40.55,
+        "std": 2.11
       },
       "features": [
         "grid_id",

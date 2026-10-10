@@ -1,6 +1,6 @@
 {
   "city_id": "bengaluru",
-  "built_at": "2026-10-10T10:05:13.770034+00:00",
+  "built_at": "2026-10-10T17:16:00.611232+00:00",
   "sources": {
     "landsat": {
       "licence": "Landsat Collection 2 Level-2 \u2014 USGS, public domain",
@@ -17,7 +17,7 @@
           "date": "2024-05-05",
           "platform": "landsat-9",
           "cloud_cover": 0.02,
-          "valid_frac": 0.994
+          "valid_frac": 0.995
         },
         {
           "id": "LC08_L2SP_144051_20240411_02_T1",
@@ -38,7 +38,7 @@
           "date": "2025-04-14",
           "platform": "landsat-8",
           "cloud_cover": 0.92,
-          "valid_frac": 0.997
+          "valid_frac": 0.998
         },
         {
           "id": "LC09_L2SP_144051_20250422_02_T1",
@@ -59,35 +59,35 @@
           "date": "2025-05-08",
           "platform": "landsat-9",
           "cloud_cover": 5.73,
-          "valid_frac": 0.919
+          "valid_frac": 0.918
         },
         {
           "id": "LC09_L2SP_144051_20260409_02_T1",
           "date": "2026-04-09",
           "platform": "landsat-9",
           "cloud_cover": 6.69,
-          "valid_frac": 0.992
+          "valid_frac": 0.972
         },
         {
           "id": "LC08_L2SP_144051_20260417_02_T1",
           "date": "2026-04-17",
           "platform": "landsat-8",
           "cloud_cover": 9.82,
-          "valid_frac": 0.651
+          "valid_frac": 0.605
         },
         {
           "id": "LC09_L2SP_144051_20250406_02_T1",
           "date": "2025-04-06",
           "platform": "landsat-9",
           "cloud_cover": 12.11,
-          "valid_frac": 0.322
+          "valid_frac": 0.304
         },
         {
           "id": "LC08_L2SP_144051_20260604_02_T1",
           "date": "2026-06-04",
           "platform": "landsat-8",
           "cloud_cover": 14.37,
-          "valid_frac": 0.886
+          "valid_frac": 0.879
         },
         {
           "id": "LC08_L2SP_144051_20260503_02_T1",
@@ -101,7 +101,7 @@
           "date": "2025-04-30",
           "platform": "landsat-8",
           "cloud_cover": 15.3,
-          "valid_frac": 0.94
+          "valid_frac": 0.948
         }
       ]
     },
@@ -141,12 +141,12 @@
   "notes": [
     "OSM building features not collected (opt-in); the model does not use them."
   ],
-  "n_cells": 4225,
-  "target_valid_cells": 4225,
+  "n_cells": 5476,
+  "target_valid_cells": 5476,
   "ward_kind": "2km_analysis_zones",
   "lst_c": {
-    "mean": 40.32,
-    "std": 2.02
+    "mean": 40.55,
+    "std": 2.11
   },
   "features": [
     "grid_id",

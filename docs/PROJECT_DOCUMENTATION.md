@@ -96,20 +96,22 @@ Imagery is read through a STAC catalogue (`stac.py`), so nothing is downloaded i
 - `green_deficit` and `veg_imperv_ratio` are derived from land cover.
 - Heat index and wet-bulb temperature come from the weather stage.
 
+**City boundary (section 3.1).** `pipeline/real/boundary.py` fetches each city's administrative boundary from OpenStreetMap (NCT of Delhi; Mumbai City + Mumbai Suburban districts; Jaipur Municipal Corporation; Bengaluru city) and writes `boundary.geojson` and `city_mask.json`. Any cell with at least 1% of its area inside is kept and clipped to the boundary line, so maps follow the city outline with no gaps: uncovered area is 0.00% in all four cities (`scripts/check_coverage.py`). Maps, ward risk, the Scenario Lab and the planner use only these cells. A cell without a clear satellite pass would show the model's estimate, labelled "predicted"; after the rebuild every in-city cell is observed.
+
 **Analysis zones ("wards").** `wards.py` assigns each cell to a zone. By default these are 2 km × 2 km blocks (4 × 4 cells) named Zone r-c. If official ward polygons are placed at `data/external/<city>_wards.geojson` (with a `name` property), cells are assigned by centroid instead. The result is reported as `2km_analysis_zones` or `official_boundaries`.
 
-**Outputs per city** (in `data/processed/<city>/`): `features_real.parquet`, `cooling_spots.json` and `data_card.json` (sources, licences, scene counts). The four cities together give 19,681 usable cells for training.
+**Outputs per city** (in `data/processed/<city>/`): `features_real.parquet`, `cooling_spots.json` and `data_card.json` (sources, licences, scene counts). The four cities together give 25,588 usable cells for training. Each city's grid box was widened so it covers the full administrative boundary (section 3.1).
 
 ## 4. Machine-learning model
 
-The model predicts Landsat surface temperature per 500 m cell from land cover, vegetation, built form, terrain, population and weather. It transfers its spatial pattern well to cities it has never seen (Pearson r 0.72 to 0.89), but its absolute level does not, so the app shows the observed composite for hotspot tiers and uses the model to fill gaps and to compute scenario deltas.
+The model predicts Landsat surface temperature per 500 m cell from land cover, vegetation, built form, terrain, population and weather. It transfers its spatial pattern well to cities it has never seen (Pearson r 0.78 to 0.82), but its absolute level does not, so the app shows the observed composite for hotspot tiers and uses the model to fill gaps and to compute scenario deltas.
 
 **Training (`models/train_real.py`)**
 
 - Target: `lst_c`, the Landsat 8/9 C2 L2 `ST_B10` median composite (°C), April to June 2024 to 2026.
 - Estimators: an XGBoost point model plus two XGBoost quantile models (q10 and q90) for an uncertainty band.
 - Two feature sets are trained and compared: `spatial` (20 land-cover, vegetation, built-form, terrain, population and context features) and `spatial+weather` (adds air temperature, humidity, wind, solar radiation, heat index and wet-bulb). The one with the lower leave-one-city-out RMSE ships; the shipped variant is `spatial+weather` with 26 features.
-- Cells outside the best Landsat tile footprint have no target and are excluded. The shipped model version is `real-v1-20261010`, trained on 19,681 cells.
+- Cells outside the best Landsat tile footprint have no target and are excluded. The shipped model version is `real-v1-20261010`, trained on 25,588 cells.
 - Run: `python -m models.train_real`. Add `--allow-weak` to ship even if the quality gate fails.
 
 **Evaluation, written to `models/artifacts/real/model_card.json`**
@@ -123,18 +125,18 @@ The model predicts Landsat surface temperature per 500 m cell from land cover, v
 
 | Held-out city | Pearson r | RMSE (°C) | Bias (°C) | Baseline r (NDVI + impervious) |
 | --- | --- | --- | --- | --- |
-| New Delhi | 0.790 | 2.397 | -1.917 | -0.306 |
-| Mumbai | 0.885 | 3.513 | 0.123 | -0.687 |
-| Jaipur | 0.721 | 3.613 | -3.165 | -0.273 |
-| Bengaluru | 0.804 | 3.909 | 3.697 | -0.486 |
+| New Delhi | 0.823 | 2.523 | -1.923 | -0.528 |
+| Mumbai | 0.821 | 3.944 | 1.253 | -0.696 |
+| Jaipur | 0.818 | 3.065 | -2.651 | -0.478 |
+| Bengaluru | 0.775 | 3.915 | 3.651 | -0.557 |
 
 Read honestly: the spatial pattern transfers; the absolute level carries a city-level offset (the bias column). The old synthetic surface had r = -0.47 against real Delhi LST, which is what motivated the real-data tier.
 
-**Within-city accuracy (5 km spatial block CV).** Pearson r is 0.88 to 0.98 and RMSE about 0.9 to 1.2 °C across the four cities.
+**Within-city accuracy (5 km spatial block CV).** Pearson r is 0.89 to 0.98 and RMSE about 1.0 to 1.2 °C across the four cities.
 
-**Uncertainty.** The q10 to q90 band is conformally widened by 0.25 °C. Calibrated block-CV coverage against an 80% target is New Delhi 82%, Mumbai 73%, Jaipur 74% and Bengaluru 81%. The model card notes that this coverage is measured on the same folds used to widen it, so it is optimistic.
+**Uncertainty.** The q10 to q90 band is conformally widened by 0.17 °C. Calibrated block-CV coverage against an 80% target is New Delhi 81%, Mumbai 78%, Jaipur 78% and Bengaluru 81%. The model card notes that this coverage is measured on the same folds used to widen it, so it is optimistic.
 
-**Explainability (`models/explain_real.py`).** SHAP values are stored in `shap_values.parquet`. The top drivers by mean absolute SHAP are water fraction (1.23), NDBI built-up index (1.20), maximum air temperature (0.82), MNDWI (0.57) and elevation (0.46). The Drivers page in the UI shows these. SHAP explains the model, not causal effects.
+**Explainability (`models/explain_real.py`).** SHAP values are stored in `shap_values.parquet`. The top drivers by mean absolute SHAP are the NDBI built-up index (1.34), maximum air temperature (1.05), water fraction (0.78), MNDWI (0.69) and elevation (0.48). The Drivers page in the UI shows these. SHAP explains the model, not causal effects.
 
 **Artifacts** (`models/artifacts/real/`): `lst_point.json`, `lst_q10.json`, `lst_q90.json`, `feature_names.json`, `feature_importance.json`, `shap_values.parquet`, `model_card.json`.
 

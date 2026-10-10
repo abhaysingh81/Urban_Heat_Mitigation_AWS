@@ -1,106 +1,106 @@
 [
   {
-    "feature": "frac_water",
-    "mean_abs_shap": 1.2282
-  },
-  {
     "feature": "ndbi_mean",
-    "mean_abs_shap": 1.201
+    "mean_abs_shap": 1.3398
   },
   {
     "feature": "air_temp_max",
-    "mean_abs_shap": 0.8178
+    "mean_abs_shap": 1.0518
+  },
+  {
+    "feature": "frac_water",
+    "mean_abs_shap": 0.781
   },
   {
     "feature": "mndwi_mean",
-    "mean_abs_shap": 0.5699
+    "mean_abs_shap": 0.6882
   },
   {
     "feature": "elev_mean",
-    "mean_abs_shap": 0.4606
-  },
-  {
-    "feature": "ndvi_mean",
-    "mean_abs_shap": 0.2349
-  },
-  {
-    "feature": "ndvi_mean_ctx3",
-    "mean_abs_shap": 0.1792
-  },
-  {
-    "feature": "humidity_mean",
-    "mean_abs_shap": 0.1628
-  },
-  {
-    "feature": "frac_tree",
-    "mean_abs_shap": 0.1589
-  },
-  {
-    "feature": "slope_mean",
-    "mean_abs_shap": 0.1201
+    "mean_abs_shap": 0.4829
   },
   {
     "feature": "ndvi_mean_ctx7",
-    "mean_abs_shap": 0.1108
+    "mean_abs_shap": 0.28
   },
   {
-    "feature": "solar_radiation",
-    "mean_abs_shap": 0.1035
+    "feature": "ndvi_mean",
+    "mean_abs_shap": 0.2454
   },
   {
-    "feature": "frac_impervious_ctx7",
-    "mean_abs_shap": 0.0847
+    "feature": "humidity_mean",
+    "mean_abs_shap": 0.2342
   },
   {
-    "feature": "ndvi_std",
-    "mean_abs_shap": 0.08
+    "feature": "frac_tree",
+    "mean_abs_shap": 0.2011
   },
   {
-    "feature": "wind_speed_mean",
-    "mean_abs_shap": 0.0722
+    "feature": "ndvi_mean_ctx3",
+    "mean_abs_shap": 0.1715
+  },
+  {
+    "feature": "slope_mean",
+    "mean_abs_shap": 0.1521
   },
   {
     "feature": "frac_impervious",
-    "mean_abs_shap": 0.0634
+    "mean_abs_shap": 0.1098
   },
   {
-    "feature": "frac_bare_soil",
-    "mean_abs_shap": 0.0517
+    "feature": "ndvi_std",
+    "mean_abs_shap": 0.0971
+  },
+  {
+    "feature": "solar_radiation",
+    "mean_abs_shap": 0.0846
   },
   {
     "feature": "pop_density_ctx7",
-    "mean_abs_shap": 0.0514
-  },
-  {
-    "feature": "pop_density_ctx3",
-    "mean_abs_shap": 0.0482
+    "mean_abs_shap": 0.0792
   },
   {
     "feature": "pop_density",
-    "mean_abs_shap": 0.0464
+    "mean_abs_shap": 0.0784
   },
   {
-    "feature": "frac_vegetation",
-    "mean_abs_shap": 0.0421
+    "feature": "frac_impervious_ctx7",
+    "mean_abs_shap": 0.0746
+  },
+  {
+    "feature": "wind_speed_mean",
+    "mean_abs_shap": 0.06
+  },
+  {
+    "feature": "pop_density_ctx3",
+    "mean_abs_shap": 0.054
   },
   {
     "feature": "frac_impervious_ctx3",
-    "mean_abs_shap": 0.0389
+    "mean_abs_shap": 0.0471
   },
   {
     "feature": "heat_index_c",
-    "mean_abs_shap": 0.032
+    "mean_abs_shap": 0.0304
+  },
+  {
+    "feature": "frac_bare_soil",
+    "mean_abs_shap": 0.027
+  },
+  {
+    "feature": "frac_vegetation",
+    "mean_abs_shap": 0.0262
   },
   {
     "feature": "veg_imperv_ratio",
-    "mean_abs_shap": 0.021
+    "mean_abs_shap": 0.0152
   },
   {
     "feature": "green_deficit",
-    "mean_abs_shap": 0.0148
+    "mean_abs_shap": 0.0108
   },
   {
     "feature": "wet_bulb_c",
-    "mean_abs_shap": 0.0
+    "mean_abs_shap": 0.0002
   }
 ]

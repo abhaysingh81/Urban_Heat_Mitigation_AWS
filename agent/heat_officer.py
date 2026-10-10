@@ -228,11 +228,26 @@ def generate_brief(city_id: str, ward_id: str, budget_lakh: float = 5000.0,
     template_allowed = collect_allowed(facts, GUIDANCE)
 
     if use_llm and llm_enabled():
+        # Time budget: API Gateway cuts requests at ~30 s, so the LLM gets BRIEF_DEADLINE_S
+        # in total; a retry only starts if there is time left, and a slow call falls back
+        # to the template instead of timing out the whole request.
+        import concurrent.futures as cf
+        import time
+        deadline = time.monotonic() + float(os.environ.get("BRIEF_DEADLINE_S", "20"))
         extra = ""
         for attempt in range(2):
             log: list = []
+            left = deadline - time.monotonic()
+            if left < 5:
+                note = (note + "; " if note else "") + "no time left for another attempt"
+                break
             try:
-                cand = _run_llm(city_id, ward_id, budget_lakh, equity_weight, log, extra)
+                pool = cf.ThreadPoolExecutor(max_workers=1)
+                fut = pool.submit(_run_llm, city_id, ward_id, budget_lakh, equity_weight, log, extra)
+                try:
+                    cand = fut.result(timeout=left)
+                finally:
+                    pool.shutdown(wait=False)
                 # numbers must come from what the agent's tools actually returned
                 bad = find_unsupported(cand["en"] + "\n" + cand["hi"], collect_allowed(log, GUIDANCE))
                 if not log:
@@ -242,6 +257,9 @@ def generate_brief(city_id: str, ward_id: str, budget_lakh: float = 5000.0,
                     break
                 extra = f"\n\nYour previous draft used numbers not in the tool results: {bad}. Remove them."
                 note = f"retry after unsupported numbers: {bad}"
+            except cf.TimeoutError:
+                note = f"llm timed out after the {os.environ.get('BRIEF_DEADLINE_S', '20')} s brief budget"
+                break
             except Exception as e:  # Bedrock/Strands outage, bad JSON, access denied ...
                 note = f"llm unavailable: {type(e).__name__}: {e}"
                 break
@@ -250,7 +268,7 @@ def generate_brief(city_id: str, ward_id: str, budget_lakh: float = 5000.0,
 
     if brief is None:
         brief = template_brief(facts)
-        if note and "retry" in note:
+        if note and ("retry" in note or "timed out" in note or "no time" in note):
             note += "; fell back to template"
     return {"city_id": city_id, "ward_id": ward_id, "source": source, "note": note,
             "brief_en": brief["en"], "brief_hi": brief["hi"],

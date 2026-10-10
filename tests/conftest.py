@@ -73,6 +73,8 @@ def fake_city(tmp_path, monkeypatch):
     risk._load.cache_clear()
     from api import data_source
     data_source._real_grid.cache_clear()
+    data_source._city_table.cache_clear()
     yield city
     risk._load.cache_clear()
     data_source._real_grid.cache_clear()
+    data_source._city_table.cache_clear()
