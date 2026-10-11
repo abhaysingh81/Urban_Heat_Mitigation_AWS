@@ -52,10 +52,11 @@ def fake_city(tmp_path, monkeypatch):
     import api.aws as aws
     monkeypatch.setattr(aws, "RUNTIME_DIR", tmp_path / "runtime")
     monkeypatch.setattr(aws, "REAL_MODEL_DIR", tmp_path / "model")
-    for var in ("PLANS_TABLE", "REPORTS_TABLE", "DATA_BUCKET", "BEDROCK_MODEL_ID"):
+    for var in ("PLANS_TABLE", "REPORTS_TABLE", "SHELTERS_TABLE", "DATA_BUCKET", "BEDROCK_MODEL_ID"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.setattr(aws, "PLANS_TABLE", None)
     monkeypatch.setattr(aws, "REPORTS_TABLE", None)
+    monkeypatch.setattr(aws, "SHELTERS_TABLE", None)
     monkeypatch.setattr(aws, "DATA_BUCKET", None)
 
     city = "new_delhi"

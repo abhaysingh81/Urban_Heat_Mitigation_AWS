@@ -1,0 +1,1258 @@
+{
+ "new_delhi": [
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 0.0,
+   "people_protected": 500427,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.49,
+    "mid": -1.22,
+    "high": -1.95
+   },
+   "cost_per_person_inr": 192.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 0.5,
+   "people_protected": 694441,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.49,
+    "mid": -1.22,
+    "high": -1.96
+   },
+   "cost_per_person_inr": 138.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 1.0,
+   "people_protected": 699536,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.49,
+    "mid": -1.22,
+    "high": -1.96
+   },
+   "cost_per_person_inr": 137.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 0.0,
+   "people_protected": 1194733,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.49,
+    "mid": -1.22,
+    "high": -1.95
+   },
+   "cost_per_person_inr": 208.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 0.5,
+   "people_protected": 1626038,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.21,
+    "high": -1.93
+   },
+   "cost_per_person_inr": 153.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 1.0,
+   "people_protected": 1637922,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.21,
+    "high": -1.93
+   },
+   "cost_per_person_inr": 152.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 0.0,
+   "people_protected": 2236902,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.2,
+    "high": -1.92
+   },
+   "cost_per_person_inr": 223.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 0.5,
+   "people_protected": 2910119,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.21,
+    "high": -1.93
+   },
+   "cost_per_person_inr": 171.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 1.0,
+   "people_protected": 2972648,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.2,
+    "high": -1.93
+   },
+   "cost_per_person_inr": 168.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 0.0,
+   "people_protected": 4289303,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.19,
+    "high": -1.91
+   },
+   "cost_per_person_inr": 232.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 0.5,
+   "people_protected": 5034976,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.2,
+    "high": -1.93
+   },
+   "cost_per_person_inr": 198.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 1.0,
+   "people_protected": 5174445,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.2,
+    "high": -1.92
+   },
+   "cost_per_person_inr": 192.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  }
+ ],
+ "mumbai": [
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 0.0,
+   "people_protected": 624043,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.2,
+    "high": -1.92
+   },
+   "cost_per_person_inr": 154.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 0.5,
+   "people_protected": 659465,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.47,
+    "mid": -1.18,
+    "high": -1.89
+   },
+   "cost_per_person_inr": 146.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 1.0,
+   "people_protected": 662293,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.47,
+    "mid": -1.17,
+    "high": -1.88
+   },
+   "cost_per_person_inr": 145.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 0.0,
+   "people_protected": 1468778,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.47,
+    "mid": -1.16,
+    "high": -1.86
+   },
+   "cost_per_person_inr": 170.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 0.5,
+   "people_protected": 1530893,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.46,
+    "mid": -1.15,
+    "high": -1.84
+   },
+   "cost_per_person_inr": 163.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 1.0,
+   "people_protected": 1552707,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.46,
+    "mid": -1.14,
+    "high": -1.82
+   },
+   "cost_per_person_inr": 160.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 0.0,
+   "people_protected": 2761188,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.44,
+    "mid": -1.11,
+    "high": -1.78
+   },
+   "cost_per_person_inr": 180.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 0.5,
+   "people_protected": 2818797,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.44,
+    "mid": -1.11,
+    "high": -1.78
+   },
+   "cost_per_person_inr": 177.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 1.0,
+   "people_protected": 2846605,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.44,
+    "mid": -1.1,
+    "high": -1.77
+   },
+   "cost_per_person_inr": 175.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 0.0,
+   "people_protected": 5102671,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.42,
+    "mid": -1.04,
+    "high": -1.67
+   },
+   "cost_per_person_inr": 195.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 0.5,
+   "people_protected": 5208865,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.42,
+    "mid": -1.05,
+    "high": -1.67
+   },
+   "cost_per_person_inr": 191.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 1.0,
+   "people_protected": 5240727,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.42,
+    "mid": -1.05,
+    "high": -1.67
+   },
+   "cost_per_person_inr": 190.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  }
+ ],
+ "jaipur": [
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 0.0,
+   "people_protected": 127737,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.19,
+    "high": -1.91
+   },
+   "cost_per_person_inr": 752.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 0.5,
+   "people_protected": 131645,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.21,
+    "high": -1.93
+   },
+   "cost_per_person_inr": 729.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 1.0,
+   "people_protected": 135606,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.49,
+    "mid": -1.22,
+    "high": -1.96
+   },
+   "cost_per_person_inr": 708.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 0.0,
+   "people_protected": 317043,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.46,
+    "mid": -1.16,
+    "high": -1.86
+   },
+   "cost_per_person_inr": 785.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 0.5,
+   "people_protected": 327550,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.47,
+    "mid": -1.19,
+    "high": -1.9
+   },
+   "cost_per_person_inr": 760.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 1.0,
+   "people_protected": 332023,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.2,
+    "high": -1.92
+   },
+   "cost_per_person_inr": 750.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 0.0,
+   "people_protected": 614252,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.46,
+    "mid": -1.15,
+    "high": -1.84
+   },
+   "cost_per_person_inr": 811.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 0.5,
+   "people_protected": 631370,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.47,
+    "mid": -1.18,
+    "high": -1.88
+   },
+   "cost_per_person_inr": 789.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 1.0,
+   "people_protected": 646107,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.19,
+    "high": -1.91
+   },
+   "cost_per_person_inr": 771.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 0.0,
+   "people_protected": 1163867,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.45,
+    "mid": -1.12,
+    "high": -1.79
+   },
+   "cost_per_person_inr": 856.0,
+   "high_vuln_share": 0.964,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 0.5,
+   "people_protected": 1188712,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.46,
+    "mid": -1.15,
+    "high": -1.83
+   },
+   "cost_per_person_inr": 838.0,
+   "high_vuln_share": 0.986,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 1.0,
+   "people_protected": 1200328,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.46,
+    "mid": -1.16,
+    "high": -1.86
+   },
+   "cost_per_person_inr": 830.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  }
+ ],
+ "bengaluru": [
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 0.0,
+   "people_protected": 332918,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.49,
+    "mid": -1.22,
+    "high": -1.96
+   },
+   "cost_per_person_inr": 288.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 0.5,
+   "people_protected": 346840,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.49,
+    "mid": -1.22,
+    "high": -1.95
+   },
+   "cost_per_person_inr": 277.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 1000,
+   "equity_weight": 1.0,
+   "people_protected": 352498,
+   "n_actions": 24,
+   "spent_lakh": 960.0,
+   "cooling_c": {
+    "low": -0.49,
+    "mid": -1.22,
+    "high": -1.95
+   },
+   "cost_per_person_inr": 272.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 18,
+     "cost_lakh": 810.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 6,
+     "cost_lakh": 150.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 0.0,
+   "people_protected": 805000,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.2,
+    "high": -1.92
+   },
+   "cost_per_person_inr": 309.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 0.5,
+   "people_protected": 833881,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.21,
+    "high": -1.94
+   },
+   "cost_per_person_inr": 299.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 2500,
+   "equity_weight": 1.0,
+   "people_protected": 852735,
+   "n_actions": 62,
+   "spent_lakh": 2490.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.21,
+    "high": -1.94
+   },
+   "cost_per_person_inr": 292.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 47,
+     "cost_lakh": 2115.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 15,
+     "cost_lakh": 375.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 0.0,
+   "people_protected": 1533918,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.19,
+    "high": -1.9
+   },
+   "cost_per_person_inr": 325.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 0.5,
+   "people_protected": 1585019,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.2,
+    "high": -1.92
+   },
+   "cost_per_person_inr": 314.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 5000,
+   "equity_weight": 1.0,
+   "people_protected": 1618097,
+   "n_actions": 124,
+   "spent_lakh": 4980.0,
+   "cooling_c": {
+    "low": -0.48,
+    "mid": -1.2,
+    "high": -1.92
+   },
+   "cost_per_person_inr": 308.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 94,
+     "cost_lakh": 4230.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 30,
+     "cost_lakh": 750.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 0.0,
+   "people_protected": 2960356,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.46,
+    "mid": -1.16,
+    "high": -1.86
+   },
+   "cost_per_person_inr": 336.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 0.5,
+   "people_protected": 3023648,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.47,
+    "mid": -1.17,
+    "high": -1.88
+   },
+   "cost_per_person_inr": 329.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  },
+  {
+   "budget_lakh": 10000,
+   "equity_weight": 1.0,
+   "people_protected": 3046655,
+   "n_actions": 248,
+   "spent_lakh": 9960.0,
+   "cooling_c": {
+    "low": -0.47,
+    "mid": -1.18,
+    "high": -1.88
+   },
+   "cost_per_person_inr": 327.0,
+   "high_vuln_share": 1.0,
+   "by_type": [
+    {
+     "label": "Shade structures (bus stops, markets)",
+     "count": 188,
+     "cost_lakh": 8460.0
+    },
+    {
+     "label": "Cooling centre",
+     "count": 60,
+     "cost_lakh": 1500.0
+    }
+   ]
+  }
+ ]
+}

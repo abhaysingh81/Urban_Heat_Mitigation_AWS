@@ -23,7 +23,8 @@ export default function CitizenView({ cities }) {
   // regional languages (Amazon Translate) offered by this deployment; '' = follow the English/Hindi buttons
   const [regionalLangs, setRegionalLangs] = useState([]);
   const [regional, setRegional] = useState(() => { try { return localStorage.getItem('heatrelief-regional') || ''; } catch { return ''; } });
-  useEffect(() => { loadConfig().then((c) => setRegionalLangs(c.translate.languages)); }, []);
+  const [whatsappOn, setWhatsappOn] = useState(false);   // WhatsApp alerts switched on in this deployment
+  useEffect(() => { loadConfig().then((c) => { setRegionalLangs(c.translate.languages); setWhatsappOn(Boolean(c.whatsapp)); }); }, []);
   const pickRegional = (code) => {
     setRegional(code);
     try { localStorage.setItem('heatrelief-regional', code); } catch { /* storage may be blocked */ }
@@ -62,6 +63,9 @@ export default function CitizenView({ cities }) {
   const [subConsent, setSubConsent] = useState(false);
   const [subHoneypot, setSubHoneypot] = useState('');
   const [subMessage, setSubMessage] = useState('');
+  const [subChannel, setSubChannel] = useState('email');   // 'email' | 'whatsapp'
+  const [subPhone, setSubPhone] = useState('');
+  const [subError, setSubError] = useState('');
 
   useEffect(() => { setSubCity(city); }, [city]);
 
@@ -100,7 +104,7 @@ export default function CitizenView({ cities }) {
     setRoute({ key, loading: true });
     const from = pos || { lat: info.center[1], lon: info.center[0] };
     try {
-      const r = await walkingRoute(from, { lat: spot.lat, lon: spot.lon });
+      const r = await walkingRoute(from, { lat: spot.lat, lon: spot.lon }, [...new Set([lang, 'en'])]);
       setRoute({ key, ...r });
     } catch {
       // no Amazon Location key (local dev) or no route found: still show where the place is,
@@ -139,15 +143,18 @@ export default function CitizenView({ cities }) {
   const subscribe = async (e) => {
     e.preventDefault();
     if (!subConsent) return;
-    const r = await fetch(`${API_BASE}/api/v1/alerts/subscribe`, {
+    setSubError('');
+    const wa = subChannel === 'whatsapp';
+    const r = await fetch(`${API_BASE}/api/v1/${wa ? 'phone-alerts/whatsapp/subscribe' : 'alerts/subscribe'}`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: subEmail, city: subCity, min_level: subMinLevel, consent: subConsent, website: subHoneypot })
+      body: JSON.stringify({ ...(wa ? { phone: subPhone } : { email: subEmail }), city: subCity,
+        min_level: subMinLevel, consent: subConsent, website: subHoneypot })
     });
     if (r.ok) {
-      setSubMessage(t('subscribe_confirm_msg'));
+      setSubMessage(t(wa ? 'subscribe_confirm_whatsapp' : 'subscribe_confirm_msg'));
     } else {
-      const j = await r.json();
-      alert(j.detail || 'Error');
+      const j = await r.json().catch(() => ({}));
+      setSubError(typeof j.detail === 'string' ? j.detail : t('error'));
     }
   };
 
@@ -192,6 +199,8 @@ export default function CitizenView({ cities }) {
         {data.nearest_cooling_spots.length > 0 && data.nearest_cooling_spots[0].distance_m > 1500 && (
           <div className="dec-banner" style={{ borderLeftColor: 'var(--tier-high)', marginBottom: 8, marginTop: 8 }}>{t('too_far')}</div>
         )}
+        {data.refuges_skipped_full_or_closed > 0 && (
+          <div className="dec-note" style={{ margin: '4px' }}>{t('refuges_skipped').replace('{n}', data.refuges_skipped_full_or_closed)}</div>)}
         {data.nearest_cooling_spots.map((s) => {
           const key = s.name + s.lat;
           const shown = route?.key === key ? route : null;
@@ -199,7 +208,7 @@ export default function CitizenView({ cities }) {
           return (
             <div key={key}>
               <div className="glass-panel spot">
-                <div><b>{s.name}</b><div className="dec-note">{s.type.replace('_', ' ')} · {routed
+                <div><b>{s.name}</b>{['open', 'busy'].includes(s.status) && <span className={`pill ref-${s.status}`} style={{ marginLeft: 6 }}>{t(`ref_${s.status}`)}</span>}<div className="dec-note">{s.type.replace('_', ' ')} · {routed
                   ? `${Math.max(1, Math.round(shown.duration_s / 60))} ${t('walking_min')} · ${shown.distance_m} m`
                   : `${Math.max(1, Math.round(s.distance_m / 84))} ${t('walking_min')} ${t('estimate_tag')}`}</div></div>
                 <div className="spot-actions">
@@ -222,6 +231,11 @@ export default function CitizenView({ cities }) {
                       stroked: true, getLineColor: [255, 255, 255], lineWidthUnits: 'pixels', getLineWidth: 2 }),
                   ]} />
                 </div>
+                {shown.steps?.length > 0 && (
+                  <ol className="route-steps" aria-label={t('route_steps')}>
+                    {shown.steps.map((st, i) => (
+                      <li key={i}>{st.text}{st.distance_m > 0 && st.type !== 'Arrive' ? <span className="dec-note"> · {st.distance_m} m</span> : null}</li>))}
+                  </ol>)}
                 <div className="dec-note" style={{ margin: '4px' }}>
                   {shown.straight ? `${shown.failed ? t('route_unavailable') : t('route_straight_line')} ` : ''}
                   {!pos ? `${t('route_from_centre')} ` : ''}{t('map_needs_connection')}</div>
@@ -264,10 +278,23 @@ export default function CitizenView({ cities }) {
         <div className="glass-panel" style={{ padding: '16px 12px' }}>
           {subMessage ? <div className="dec-banner ok">{subMessage}</div> : (
             <form onSubmit={subscribe} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>{t('email')}</label>
-                <input type="email" required value={subEmail} onChange={e => setSubEmail(e.target.value)} style={{ width: '100%', padding: 8 }} />
-              </div>
+              {whatsappOn && (
+                <div className="seg" role="tablist" aria-label={t('alert_channel')}>
+                  {[['email', t('email')], ['whatsapp', 'WhatsApp']].map(([c, l]) => (
+                    <button key={c} type="button" role="tab" aria-selected={subChannel === c} className={subChannel === c ? 'on' : ''}
+                      onClick={() => { setSubChannel(c); setSubConsent(false); setSubError(''); }}>{l}</button>))}
+                </div>)}
+              {subChannel === 'whatsapp' ? (
+                <div>
+                  <label htmlFor="sub-phone" style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>{t('mobile_number')}</label>
+                  <input id="sub-phone" type="tel" inputMode="tel" autoComplete="tel" required placeholder="98765 43210"
+                    value={subPhone} onChange={e => setSubPhone(e.target.value)} style={{ width: '100%', padding: 8 }} />
+                </div>
+              ) : (
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>{t('email')}</label>
+                  <input type="email" required value={subEmail} onChange={e => setSubEmail(e.target.value)} style={{ width: '100%', padding: 8 }} />
+                </div>)}
               <div>
                 <label style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>{t('city') || 'City'}</label>
                 <select value={subCity} onChange={e => setSubCity(e.target.value)} style={{ width: '100%', padding: 8 }}>
@@ -284,9 +311,10 @@ export default function CitizenView({ cities }) {
               </div>
               <label style={{ display: 'flex', gap: 8, fontSize: 12, alignItems: 'flex-start', marginTop: 4 }}>
                 <input type="checkbox" required checked={subConsent} onChange={e => setSubConsent(e.target.checked)} style={{ marginTop: 2 }} />
-                <span>{t('consent_desc')}</span>
+                <span>{t(subChannel === 'whatsapp' ? 'consent_desc_whatsapp' : 'consent_desc')}</span>
               </label>
               <input type="text" value={subHoneypot} onChange={e => setSubHoneypot(e.target.value)} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+              {subError && <div className="error-text" role="alert">{subError}</div>}
               <button type="submit" className="btn-primary" style={{ marginTop: 8, padding: 10 }}>{t('subscribe')}</button>
             </form>
           )}

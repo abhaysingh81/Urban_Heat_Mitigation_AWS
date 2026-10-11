@@ -19,6 +19,7 @@ class BriefBody(BaseModel):
     equity_weight: float = Field(0.5, ge=0, le=1)
     use_llm: bool = True
     make_pdf: bool = True
+    fresh: bool = Field(False, description="skip the nightly batch brief and write a new one now")
     languages: list[str] = Field(default_factory=list, max_length=6,
                                  description="extra languages for the brief text, e.g. ['mr', 'kn']")
 
@@ -34,12 +35,18 @@ async def create_brief(body: BriefBody, city_id: str = Depends(require_real)):
     from agent.heat_officer import generate_brief
     if body.ward_id not in set(ward_table(city_id)["ward_id"]):
         raise HTTPException(404, f"Unknown ward '{body.ward_id}'")
-    try:
-        brief = generate_brief(city_id, body.ward_id, body.budget_lakh, body.equity_weight, body.use_llm)
-    except ValueError as e:
-        raise HTTPException(400, str(e))
-
-    brief["cached"] = False
+    # nightly Bedrock batch brief (default budget / equity only, while fresh); else write one now
+    from agent.batch_briefs import cached_brief
+    cached = None if (body.fresh or not body.use_llm) else cached_brief(
+        city_id, body.ward_id, body.budget_lakh, body.equity_weight)
+    if cached:
+        brief = {**cached, "cached": True}
+    else:
+        try:
+            brief = generate_brief(city_id, body.ward_id, body.budget_lakh, body.equity_weight, body.use_llm)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        brief["cached"] = False
     # Regional-language copies (Amazon Translate) of the verified English brief. They are machine
     # translations for reading only: the English and Hindi texts stay the official ones.
     brief["translations"] = {}

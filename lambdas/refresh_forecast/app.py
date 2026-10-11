@@ -18,7 +18,7 @@ import os
 import time
 from datetime import datetime, timezone
 
-from api import aws, email_alerts, translate
+from api import aws, email_alerts, static_map, translate, voice_calls, whatsapp
 from api.routers.meta import LEVEL_TEXT
 from models.forecast import get_forecast
 from models.risk import risk_today
@@ -147,11 +147,31 @@ def process_city(city_id: str, simulate: str = None) -> dict:
         # citizens who signed up through Amazon SES get the HTML card
         if email_alerts.enabled():
             site = email_alerts.site_url()
+            # Amazon Location static map of today's zones and refuges (None when off or failing);
+            # a simulation gets its own file so it never replaces the real day's map
+            map_url = static_map.render(city_id, res["top_wards"],
+                                        day=f"{t['date']}-simulated" if simulate else t["date"])
+            out["map"] = bool(map_url)
             subject, html_body, text_body = email_alerts.build_card(
                 name, res, LEVEL_TEXT[level], audio_url=audio_url, regional=regional, simulated=bool(simulate),
-                citizen_url=f"{site}/citizen?city={city_id}" if site else None)
+                citizen_url=f"{site}/citizen?city={city_id}" if site else None, map_url=map_url)
             out["ses"] = email_alerts.send_city_alert(city_id, level, subject, html_body, text_body)
             out["alert_sent"] = out["alert_sent"] or out["ses"]["sent"] > 0
+
+        # WhatsApp (End User Messaging Social) and phone calls (Amazon Connect) reach real
+        # people's phones, so a simulation never uses them
+        if simulate:
+            out["whatsapp"] = out["voice"] = "skipped (simulation)"
+        else:
+            site = email_alerts.site_url()
+            if whatsapp.enabled():
+                out["whatsapp"] = whatsapp.send_city_alert(
+                    city_id, name, level, res["forecast_tmax_c"], [w["ward_name"] for w in res["top_wards"]],
+                    LEVEL_TEXT[level][0], site)
+                out["alert_sent"] = out["alert_sent"] or out["whatsapp"]["sent"] > 0
+            if voice_calls.enabled():
+                en, hi = advisory_text_en(name, res), advisory_text_hi(name, res)
+                out["voice"] = voice_calls.call_city(city_id, level, {"en": en, "hi": hi}, t["date"])
     emf(city_id, AlertsFired=int(out["alert_sent"]), RefreshOk=1, RefreshFailed=0)
     return out
 

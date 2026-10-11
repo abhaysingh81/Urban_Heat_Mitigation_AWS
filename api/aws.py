@@ -14,6 +14,7 @@ RUNTIME_DIR = Path(os.environ.get("RUNTIME_DIR", PROJECT_ROOT / "data" / "runtim
 DATA_BUCKET = os.environ.get("DATA_BUCKET")          # S3: data, briefs, report photos
 PLANS_TABLE = os.environ.get("PLANS_TABLE")          # DynamoDB
 REPORTS_TABLE = os.environ.get("REPORTS_TABLE")      # DynamoDB
+SHELTERS_TABLE = os.environ.get("SHELTERS_TABLE")    # DynamoDB: live cool-refuge status (Feature L)
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 

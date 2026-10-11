@@ -1,28 +1,15 @@
 // Amazon Location Service (optional). The API key is created by the stack when it is deployed
 // with ENABLE_LOCATION_MAP=1 and is restricted to the site's own origin; without it the app
 // falls back to the CARTO basemap and straight-line walking estimates.
+import { parseRoute } from './routeParse';
+
+export { parseRoute, parseSteps } from './routeParse';
 export const LOCATION_KEY = import.meta.env.VITE_AWS_LOCATION_KEY || '';
 export const LOCATION_REGION = import.meta.env.VITE_AWS_REGION || 'us-east-1';
 
-// CalculateRoutes response -> { path: [[lon, lat], …], distance_m, duration_s }, or null if unusable.
-export function parseRoute(json) {
-  const route = json?.Routes?.[0];
-  if (!route) return null;
-  const legs = route.Legs || [];
-  const path = legs.flatMap((leg) => leg?.Geometry?.LineString || []);
-  if (path.length < 2) return null;
-  const legSum = (field) => legs.reduce((sum, leg) => {
-    const details = leg.PedestrianLegDetails || leg.VehicleLegDetails || leg.FerryLegDetails;
-    return sum + (details?.Summary?.Overview?.[field] || 0);
-  }, 0);
-  const distance = route.Summary?.Distance ?? legSum('Distance');
-  const duration = route.Summary?.Duration ?? legSum('Duration');
-  return { path, distance_m: Math.round(distance), duration_s: Math.round(duration) };
-}
-
 // Walking route between two { lat, lon } points. The position goes straight from the browser to
 // Amazon Location; it is never sent to this app's API or logged. Throws when no route is available.
-export async function walkingRoute(origin, destination) {
+export async function walkingRoute(origin, destination, languages = ['en']) {
   if (!LOCATION_KEY) throw new Error('no location key');
   const res = await fetch(
     `https://routes.geo.${LOCATION_REGION}.amazonaws.com/v2/routes?key=${encodeURIComponent(LOCATION_KEY)}`, {
@@ -33,6 +20,11 @@ export async function walkingRoute(origin, destination) {
         Destination: [destination.lon, destination.lat],
         TravelMode: 'Pedestrian',
         LegGeometryFormat: 'Simple',
+        // step-by-step text: Instruction is only filled for TravelStepType "Default"
+        TravelStepType: 'Default',
+        LegAdditionalFeatures: ['TravelStepInstructions'],
+        Languages: languages,
+        InstructionsMeasurementSystem: 'Metric',
       }),
     });
   if (!res.ok) throw new Error(`route request failed (${res.status})`);

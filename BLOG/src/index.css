@@ -1,0 +1,356 @@
+@import "tailwindcss";
+
+/*
+  HeatRelief field report.
+  Light pages for reading; dark "thermal plates" where the satellite data is the image.
+  Heat is carried by the inferno ramp (perceptually uniform, colour-blind safe) and one accent.
+*/
+
+:root {
+  --bg: oklch(0.985 0 0);
+  --surface: oklch(1 0 0);
+  --sunk: oklch(0.955 0.004 30);
+  --ink: oklch(0.2 0.012 30);
+  --ink-2: oklch(0.34 0.012 30);
+  --muted: oklch(0.47 0.01 30);
+  --rule: oklch(0.88 0.006 30);
+  --rule-strong: oklch(0.75 0.008 30);
+
+  --heat: oklch(0.6 0.2 35);
+  --heat-ink: oklch(0.5 0.19 33);
+  --heat-wash: oklch(0.95 0.035 40);
+  --cool: oklch(0.56 0.1 205);
+  --cool-ink: oklch(0.46 0.09 210);
+  --cool-wash: oklch(0.95 0.025 205);
+
+  /* thermal plate (the "night" the satellite sees through) */
+  --plate: oklch(0.14 0.035 300);
+  --plate-2: oklch(0.2 0.045 300);
+  --plate-ink: oklch(0.97 0.01 80);
+  --plate-muted: oklch(0.76 0.03 300);
+  --plate-rule: oklch(0.32 0.05 300);
+
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Literata", "Noto Serif Devanagari", Georgia, serif;
+  --font-hindi: "Noto Serif Devanagari", "Literata", serif;
+
+  --measure: 66ch;
+  --wide: 76rem;
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+
+  --z-sticky: 20;
+  --z-tooltip: 40;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: oklch(0.16 0.012 300);
+  --surface: oklch(0.2 0.014 300);
+  --sunk: oklch(0.13 0.012 300);
+  --ink: oklch(0.95 0.008 80);
+  --ink-2: oklch(0.85 0.01 80);
+  --muted: oklch(0.72 0.012 300);
+  --rule: oklch(0.3 0.016 300);
+  --rule-strong: oklch(0.42 0.02 300);
+  --heat: oklch(0.7 0.18 40);
+  --heat-ink: oklch(0.76 0.15 45);
+  --heat-wash: oklch(0.26 0.05 35);
+  --cool: oklch(0.72 0.1 200);
+  --cool-ink: oklch(0.78 0.09 200);
+  --cool-wash: oklch(0.25 0.035 210);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: oklch(0.16 0.012 300);
+    --surface: oklch(0.2 0.014 300);
+    --sunk: oklch(0.13 0.012 300);
+    --ink: oklch(0.95 0.008 80);
+    --ink-2: oklch(0.85 0.01 80);
+    --muted: oklch(0.72 0.012 300);
+    --rule: oklch(0.3 0.016 300);
+    --rule-strong: oklch(0.42 0.02 300);
+    --heat: oklch(0.7 0.18 40);
+    --heat-ink: oklch(0.76 0.15 45);
+    --heat-wash: oklch(0.26 0.05 35);
+    --cool: oklch(0.72 0.1 200);
+    --cool-ink: oklch(0.78 0.09 200);
+    --cool-wash: oklch(0.25 0.035 210);
+    color-scheme: dark;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: clamp(1.0625rem, 0.95rem + 0.35vw, 1.1875rem);
+  line-height: 1.65;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--heat-wash);
+  color: var(--ink);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+  margin: 0;
+}
+
+p, li {
+  text-wrap: pretty;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: var(--rule-strong);
+  transition: text-decoration-color 0.2s;
+}
+a:hover {
+  text-decoration-color: var(--heat);
+}
+
+:focus-visible {
+  outline: 2px solid var(--heat);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------- type roles ---------- */
+
+.ui {
+  font-family: var(--font-display);
+  font-stretch: 92%;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.005em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.hindi {
+  font-family: var(--font-hindi);
+  line-height: 1.85;
+}
+
+/* ---------- article layout ---------- */
+
+.prose-col {
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.wide-col {
+  max-width: var(--wide);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.prose-col > p {
+  margin: 0 0 1.15em;
+  color: var(--ink-2);
+}
+.prose-col > p strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.chapter {
+  padding-block: clamp(4rem, 9vw, 7.5rem) 0;
+}
+
+.chapter-title {
+  font-size: clamp(2rem, 1.3rem + 2.6vw, 3.5rem);
+  font-weight: 800;
+  font-stretch: 78%;
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  margin-bottom: 1.5rem;
+}
+
+.lede {
+  font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.45rem);
+  line-height: 1.5;
+  color: var(--ink) !important;
+}
+
+.subhead {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-stretch: 88%;
+  margin: 2.25rem 0 0.6rem;
+  line-height: 1.2;
+}
+
+/* figures break out of the reading column */
+.figure {
+  margin-block: 2.5rem 3rem;
+}
+.fig-caption {
+  font-family: var(--font-display);
+  font-stretch: 92%;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: var(--measure);
+  margin-top: 0.85rem;
+}
+.fig-caption b {
+  color: var(--ink-2);
+  font-weight: 650;
+}
+
+/* note set beside a claim: tinted block, full border, no side stripe */
+.aside-note {
+  background: var(--sunk);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1rem 1.15rem;
+  font-family: var(--font-display);
+  font-stretch: 94%;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin: 1.5rem 0 2rem;
+}
+.aside-note b {
+  color: var(--ink);
+}
+
+/* ---------- controls ---------- */
+
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  background: var(--surface);
+}
+.seg button {
+  font: inherit;
+  font-family: var(--font-display);
+  font-stretch: 90%;
+  font-size: 0.875rem;
+  font-weight: 550;
+  padding: 0.4rem 0.75rem;
+  min-height: 2.25rem;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.18s var(--ease-out), color 0.18s;
+}
+.seg button:hover {
+  background: var(--sunk);
+  color: var(--ink);
+}
+.seg button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.plate .seg {
+  background: var(--plate-2);
+  border-color: var(--plate-rule);
+}
+.plate .seg button {
+  color: var(--plate-muted);
+}
+.plate .seg button:hover {
+  background: var(--plate-rule);
+  color: var(--plate-ink);
+}
+.plate .seg button[aria-pressed="true"] {
+  background: var(--plate-ink);
+  color: var(--plate);
+}
+
+/* thermal plate: dark section where the data is the picture */
+.plate {
+  background: var(--plate);
+  color: var(--plate-ink);
+}
+
+/* ---------- tables ---------- */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-display);
+  font-stretch: 92%;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+.data-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  border-bottom: 1px solid var(--rule-strong);
+  vertical-align: bottom;
+}
+.data-table td {
+  padding: 0.6rem 0.75rem 0.6rem 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+}
+.data-table td.r,
+.data-table th.r {
+  text-align: right;
+}
+
+/* ---------- motion ---------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-in > * {
+  animation: rise 0.9s var(--ease-out) both;
+}
+.hero-in > *:nth-child(2) { animation-delay: 0.12s; }
+.hero-in > *:nth-child(3) { animation-delay: 0.24s; }
+.hero-in > *:nth-child(4) { animation-delay: 0.36s; }
+.hero-in > *:nth-child(5) { animation-delay: 0.48s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

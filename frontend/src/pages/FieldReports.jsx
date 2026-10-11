@@ -3,6 +3,8 @@ import { API_BASE } from '../api';
 import { useLang } from '../i18n';
 import { loadConfig, staffHeaders, staffSession, signOut } from '../platform';
 import StaffSignIn from '../components/StaffSignIn';
+import RefugePanel from '../components/RefugePanel';
+import VoiceContactsPanel from '../components/VoiceContactsPanel';
 import './Decision.css';
 
 const NEXT = { new: ['verified', 'rejected'], verified: ['dispatched', 'resolved'], dispatched: ['resolved'], resolved: [], rejected: [] };
@@ -20,6 +22,15 @@ export default function FieldReports({ city, cityInfo }) {
   const [denied, setDenied] = useState(false);   // signed in, but without an officer or planner role
   const [live, setLive] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [shelterUpdates, setShelterUpdates] = useState({});   // refuge id -> latest live status
+  const [wards, setWards] = useState([]);                       // for the phone-call contacts panel
+  useEffect(() => {
+    if (!cfg?.voice_calls) return undefined;
+    let active = true;
+    fetch(`${API_BASE}/api/v1/risk/wards?city=${city}`).then((r) => r.json())
+      .then((d) => active && setWards(d.wards || [])).catch(() => {});
+    return () => { active = false; };
+  }, [cfg, city]);
   const cityRef = useRef(city);
   useEffect(() => { cityRef.current = city; }, [city]);
 
@@ -59,6 +70,10 @@ export default function FieldReports({ city, cityInfo }) {
       ws.onopen = () => { setLive(true); ping = setInterval(() => ws.readyState === 1 && ws.send('{"action":"ping"}'), 240000); };
       ws.onmessage = (m) => {
         let ev; try { ev = JSON.parse(m.data); } catch { return; }
+        if (ev.type === 'shelter.updated') {
+          if (ev.city_id === cityRef.current && ev.shelter) setShelterUpdates((m) => ({ ...m, [ev.shelter.id]: ev.shelter }));
+          return;
+        }
         const rep = ev.report;
         if (!rep || rep.city_id !== cityRef.current) return;
         setReports((old) => (ev.type === 'report.created' && !old.some((r) => r.id === rep.id)
@@ -119,5 +134,8 @@ export default function FieldReports({ city, cityInfo }) {
             </div>)}
           <div className="dec-note" style={{ marginTop: 10 }}>{t('reports_privacy')}</div>
         </div>)}
+      {!needSignIn && <RefugePanel key={city} city={city} liveUpdates={shelterUpdates} />}
+      {/* only collected where calls are actually switched on: no phone numbers without a purpose */}
+      {!needSignIn && cfg?.voice_calls && <VoiceContactsPanel key={`v-${city}`} city={city} wards={wards} />}
     </div>);
 }

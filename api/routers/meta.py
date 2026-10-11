@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from api import aws, translate
+from api import aws, shelters, translate
 from api.routers.risk import require_real, today as risk_today_endpoint
 from api.data_source import read_features
 from models.risk import nearest_cooling_spots, ward_table
@@ -66,6 +66,7 @@ async def citizen(lat: float = Query(...), lon: float = Query(...), city_id: str
             except Exception:
                 return None
         advisory_url, advisory_url_en = audio(""), audio("-en")
+    places, skipped = shelters.recommend(city_id, nearest_cooling_spots(city_id, lat, lon, 8), 3)
     en, hi = LEVEL_TEXT[level]
     # regional language (Amazon Translate): None when it is off, unsupported or the call fails
     local = translate.translate(en, lang) if lang else None
@@ -80,5 +81,7 @@ async def citizen(lat: float = Query(...), lon: float = Query(...), city_id: str
                                             "risk_score": float(ward["risk_score"])},
         "forecast_tmax_c": today.get("forecast_tmax_c"),
         "advisory_audio_url": advisory_url, "advisory_audio_url_en": advisory_url_en,
-        "nearest_cooling_spots": nearest_cooling_spots(city_id, lat, lon, 3),
+        # full or closed refuges (live status from ward officers) are moved out of the way
+        "nearest_cooling_spots": places,
+        "refuges_skipped_full_or_closed": skipped,
     }

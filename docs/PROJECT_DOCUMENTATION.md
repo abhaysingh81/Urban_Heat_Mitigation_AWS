@@ -364,6 +364,26 @@ The Strands agent calls Bedrock with the model in `BEDROCK_MODEL_ID` and, when s
 - **Budget:** monthly cost budget of 25 USD by default, with an email at 80% of actual spend.
 - **Cost shape:** DynamoDB is on-demand, Lambda is pay per request, and S3 lifecycle rules expire generated files, so an idle stack costs little. The README advises warming the API before a demo, because Lambda cold starts load the data and model.
 
+### 9.6 Services added on 2026-10-11 (each opt-in with a deploy switch)
+
+Every one of these degrades gracefully: with its switch off, or when the call fails, the app behaves as before.
+
+| AWS service | What it does in HeatRelief | Switch |
+| --- | --- | --- |
+| Amazon DynamoDB (`ShelterStatusTable`) + WebSocket API | Ward officers mark cool refuges open / busy / full / closed; the citizen page skips full or closed ones; changes reach other officers live | always on |
+| Amazon CloudWatch `GetMetricData` | Requests, errors, p95 latency and alerts shown on the `/aws` page | always on |
+| Amazon Location Service Routes V2 | Turn-by-turn walking directions under the citizen route map | `ENABLE_LOCATION_MAP=1` |
+| Amazon Location Service `GetStaticMap` | Map of high-risk zones and open cool refuges in the HTML alert email | `ENABLE_LOCATION_MAP=1` + SES |
+| Amazon Bedrock batch inference | Every ward's bilingual brief written overnight in one job; the API serves them instantly | `ENABLE_BATCH_BRIEFS=1` |
+| Amazon CloudWatch Synthetics | Uptime canary every 5 minutes (API + citizen page), alarm to the ops topic | `ENABLE_SYNTHETICS=1` |
+| AWS Secrets Manager | Generated officer token (fail-closed) and the phone-alerts signing key | `ENABLE_SECRETS=1` |
+| Amazon Data Firehose | Full street-sensor history to S3 for Athena (DynamoDB keeps 7 days) | with `ENABLE_IOT_SENSORS=1` |
+| AWS End User Messaging Social | WhatsApp heat alerts with double opt-in and signed unsubscribe links | `WHATSAPP_PHONE_NUMBER_ID=` |
+| Amazon Connect (+ Amazon Polly) | Phone calls on red days for people without smartphones, registered by ward officers with consent | `CONNECT_INSTANCE_ID=` + flow |
+
+Phone numbers (WhatsApp, calls) are stored only with consent, masked on screens, hashed in logs and deleted
+automatically after a year. None of these services has been exercised on a live AWS account yet.
+
 ## 10. Infrastructure as code and deployment
 
 One command deploys the whole stack: `scripts/deploy.sh <alert-email> [bedrock-model-id]`. It needs AWS credentials, Docker, the SAM CLI and Node 20 or later.

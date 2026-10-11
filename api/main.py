@@ -9,7 +9,7 @@ import pandas as pd
 
 from pipeline.config import data_version, CITIES, DEFAULT_CITY, list_cities, city_features_file, PROCESSED_DIR
 from api.deps import get_city_id
-from api.routers import grid, hotspots, drivers, scenarios, risk, plans, brief, reports, meta, lab
+from api.routers import grid, hotspots, drivers, scenarios, risk, plans, brief, reports, meta, lab, shelters as shelters_router, phone_alerts
 from api import aws
 from api.data_source import read_features, data_kind
 import os
@@ -50,6 +50,8 @@ app.include_router(brief.router)
 app.include_router(reports.router)
 app.include_router(meta.router)
 app.include_router(lab.router)
+app.include_router(shelters_router.router)
+app.include_router(phone_alerts.router)
 
 from api.routers import alerts, sensors, system
 app.include_router(alerts.router)

@@ -153,7 +153,7 @@ def confirm(email: str, token: str) -> str | None:
 # ── daily alert ──────────────────────────────────────────────
 def build_card(city_name: str, res: dict, texts: tuple[str, str], *, audio_url: str | None = None,
                citizen_url: str | None = None, regional: tuple[str, str] | None = None,
-               simulated: bool = False) -> tuple[str, str, str]:
+               simulated: bool = False, map_url: str | None = None) -> tuple[str, str, str]:
     """(subject, html, plain text) for one city's alert. `regional` is (language name, translated advice)."""
     level = res["alert_level"]
     colour = LEVEL_COLOUR[level]
@@ -210,6 +210,14 @@ def build_card(city_name: str, res: dict, texts: tuple[str, str], *, audio_url: 
     if zones:
         parts.append(row('<div style="font-weight:bold;font-size:14px;margin-bottom:4px">Highest-risk zones today</div>'
                          f'<table role="presentation" cellpadding="0" cellspacing="0">{zone_rows}</table>', "0 20px 14px"))
+    if map_url:   # Amazon Location static map: numbered zones (red) and nearest open cool refuges (blue)
+        parts.append(row(
+            f'<img src="{e(map_url)}" width="520" style="display:block;width:100%;max-width:520px;height:auto;'
+            'border-radius:6px" alt="Map of the highest-risk zones (red, numbered) and the nearest '
+            'cool refuges (blue)"><div style="font-size:12px;color:#666;margin-top:4px">'
+            '<span style="color:#c81e3a">&#9679;</span> high-risk zone &nbsp; '
+            '<span style="color:#1f6feb">&#9679;</span> cool refuge (not reported full or closed)</div>', "0 20px 14px"))
+        text += f"\n\nMap of high-risk zones and cool refuges: {map_url}"
     buttons = ""
     if citizen_url:
         buttons += (f'<a href="{e(citizen_url)}" style="display:inline-block;background:#1f6feb;color:#ffffff;'

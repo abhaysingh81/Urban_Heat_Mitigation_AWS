@@ -1,0 +1,131 @@
+{
+ "version": "real-v1-20261010",
+ "variant": "spatial+weather",
+ "n_cells": 25588,
+ "n_features": 26,
+ "target": "Landsat 8/9 C2 L2 ST_B10 median composite (°C), Apr–Jun 2024–2026",
+ "loco": {
+  "new_delhi": {
+   "n": 13320,
+   "pearson_r": 0.823,
+   "rmse": 2.523,
+   "bias": -1.923,
+   "r2": 0.187
+  },
+  "mumbai": {
+   "n": 3864,
+   "pearson_r": 0.821,
+   "rmse": 3.944,
+   "bias": 1.253,
+   "r2": 0.487
+  },
+  "jaipur": {
+   "n": 2928,
+   "pearson_r": 0.818,
+   "rmse": 3.065,
+   "bias": -2.651,
+   "r2": -0.343
+  },
+  "bengaluru": {
+   "n": 5476,
+   "pearson_r": 0.775,
+   "rmse": 3.915,
+   "bias": 3.651,
+   "r2": -2.437
+  }
+ },
+ "baseline_r": {
+  "new_delhi": -0.528,
+  "mumbai": -0.696,
+  "jaipur": -0.478,
+  "bengaluru": -0.557
+ },
+ "block_cv": {
+  "new_delhi": {
+   "pearson_r": 0.905,
+   "rmse": 1.193
+  },
+  "mumbai": {
+   "pearson_r": 0.978,
+   "rmse": 1.156
+  },
+  "jaipur": {
+   "pearson_r": 0.898,
+   "rmse": 1.162
+  },
+  "bengaluru": {
+   "pearson_r": 0.891,
+   "rmse": 0.958
+  }
+ },
+ "coverage_raw": {
+  "new_delhi": 0.741,
+  "mumbai": 0.654,
+  "jaipur": 0.697,
+  "bengaluru": 0.739
+ },
+ "coverage_calibrated": {
+  "new_delhi": 0.807,
+  "mumbai": 0.775,
+  "jaipur": 0.78,
+  "bengaluru": 0.812
+ },
+ "band_widen_c": 0.17,
+ "shap": [
+  {
+   "feature": "ndbi_mean",
+   "mean_abs_shap": 1.3398
+  },
+  {
+   "feature": "air_temp_max",
+   "mean_abs_shap": 1.0518
+  },
+  {
+   "feature": "frac_water",
+   "mean_abs_shap": 0.781
+  },
+  {
+   "feature": "mndwi_mean",
+   "mean_abs_shap": 0.6882
+  },
+  {
+   "feature": "elev_mean",
+   "mean_abs_shap": 0.4829
+  },
+  {
+   "feature": "ndvi_mean_ctx7",
+   "mean_abs_shap": 0.28
+  },
+  {
+   "feature": "ndvi_mean",
+   "mean_abs_shap": 0.2454
+  },
+  {
+   "feature": "humidity_mean",
+   "mean_abs_shap": 0.2342
+  },
+  {
+   "feature": "frac_tree",
+   "mean_abs_shap": 0.2011
+  },
+  {
+   "feature": "ndvi_mean_ctx3",
+   "mean_abs_shap": 0.1715
+  }
+ ],
+ "limitations": [
+  "Land surface temperature is not air temperature or heat stress.",
+  "Model learns correlations across cells; SHAP explains the model, not causal effects.",
+  "Weather features are city-level (constant within a city) and help between-city transfer only.",
+  "Cells outside the best Landsat tile footprint have no target and are excluded from training.",
+  "Spatial pattern transfers across cities far better than absolute level: a city-level offset (see bias and R²) remains for cities the model has not seen.",
+  "With four training cities the model cannot learn a reliable weather-to-level relationship; weather features are included only if they lower leave-city-out RMSE.",
+  "The q10–q90 band is conformally widened; calibrated coverage is measured on the same block-CV folds used to widen it, so it is optimistic.",
+  "Cooling-scenario results are estimates clamped to published ranges, not guarantees."
+ ],
+ "quality_gate": {
+  "min_pearson_r_leave_city_out": 0.3,
+  "passed": true,
+  "failing_cities": []
+ }
+}

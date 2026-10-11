@@ -64,3 +64,19 @@ select { background: var(--select-option-bg); color: var(--text-primary); border
 .pill.rep-resolved { background: color-mix(in srgb, var(--tier-normal) 30%, transparent); }
 .pill.rep-rejected { background: var(--overlay-4); }
 .citizen .lang-more { background: var(--overlay-4); color: var(--text-primary); border: 1px solid var(--glass-border); padding: 8px 8px; border-radius: var(--radius-md); max-width: 150px; }
+
+/* live cool-refuge status (Feature L) */
+.pill.ref-open { background: color-mix(in srgb, var(--tier-normal) 28%, transparent); }
+.pill.ref-busy { background: color-mix(in srgb, var(--tier-moderate) 32%, transparent); }
+.pill.ref-full { background: color-mix(in srgb, var(--tier-critical) 30%, transparent); }
+.pill.ref-closed { background: var(--overlay-5); text-decoration: line-through; }
+.pill.ref-unknown { background: var(--overlay-4); color: var(--text-secondary); }
+
+/* walking directions under the citizen route map (Feature B) */
+.route-steps { margin: 6px 4px 4px 22px; padding: 0; font-size: 14px; line-height: 1.5; }
+.route-steps li { margin: 2px 0; }
+
+/* segmented toggle (Scenario Lab, Ward Planner, citizen alert channel) */
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--sunken-bg); padding: 3px; border-radius: var(--radius-md); }
+.seg button { border: 0; background: transparent; color: var(--text-secondary); padding: 6px 10px; border-radius: calc(var(--radius-md) - 2px); font-size: 13px; cursor: pointer; }
+.seg button.on { background: var(--accent-primary); color: #fff; }

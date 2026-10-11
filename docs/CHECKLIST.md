@@ -13,7 +13,7 @@ Update this file whenever something changes state; keep the "Verified how" notes
 - [ ] **BLOCKER — Confirm deadline hour** (Oct 11, hour unpublished) on the schedule page.
 - [ ] Every teammate registered and student-verified; one submission form per team; check Amazon fast-track batch eligibility (2027/2028 only).
 - [~] Writeup: problem, build, where AWS fits, AI coding tools used. Technical + AWS reference written: `docs/PROJECT_DOCUMENTATION.md` (no "AI coding tools used" section yet).
-- [ ] AWS Builder Center blog (separate prize).
+- [~] AWS Builder Center blog (separate prize). Interactive blog rebuilt in `BLOG/` (2026-10-11): every figure exported from the repo by `scripts/export_blog_data.py`; text post + figure images in `BLOG/builder-center/`. Still to do: publish on Builder Center, fill the blog URL + video link in `POST.md`, confirm the AI-tools list, flip `AWS_STATUS` in `BLOG/src/content.ts` if deployed, host the built site (`BLOG/dist`).
 - [ ] Commit the work (nothing is committed; ~69 changed/new files) — review `git diff` first.
 
 ## B. Real-data pipeline (`pipeline/real/`)
@@ -33,7 +33,7 @@ Update this file whenever something changes state; keep the "Verified how" notes
 
 ## C. Model (`models/train_real.py`)
 
-- [x] XGBoost point + q10/q90, leave-one-city-out + 5 km block CV, baselines, quality gate (passed, r 0.72–0.89)
+- [x] XGBoost point + q10/q90, leave-one-city-out + 5 km block CV, baselines, quality gate (passed; shipped spatial+weather LOCO r 0.775–0.823 per model card real-v1-20261010)
 - [x] Conformal band calibration (coverage 73–82% vs 80% target; optimistic, same folds)
 - [x] Model card JSON served by API and page
 - [~] **Absolute level does not transfer** (bias −3.2…+3.7 °C, R² negative for some cities). Mitigated by using observed LST for tiers. Possible fix: per-city offset calibration or anomaly target.
@@ -67,7 +67,26 @@ Update this file whenever something changes state; keep the "Verified how" notes
 - [ ] Intervention costs, cooling ranges and reference densities are placeholders — cite sources
 - [ ] Old `RiskView.jsx` / `PlanView.jsx` are now unused (routes redirect) — delete after review
 
-## E. Agent
+### Merge check 2026-10-11 (teammate PR #4, phase-2 AWS features)
+- [x] Fast-forwarded main to `0d4a085`; local `heat_officer.py` edit re-applied cleanly
+- [x] 109 tests pass; smoke 10/10; frontend builds; new endpoints answer locally (`/system/status`, `/sensors`, `/alerts/subscribe` 202, `?simulate=red`, citizen `?lang=`)
+- [x] Boundary coverage intact after merge (Delhi 6,175 cells, 0.00% uncovered); area names on 93–100% of in-city cells
+- [ ] `docs/SETUP_AND_DEPLOYMENT.md` referenced by the handover log but not in the repo
+- [ ] New lint error in `CitizenView.jsx` (setState in effect); `RiskView.jsx` warning (page unused)
+- [ ] OSM tiles still failing after rebuild: Jaipur `a_26.76_75.88`, Bengaluru `a_13.02_77.45` → re-run `build_dataset <city> --refresh osm`
+
+### AWS plan audit 2026-10-11
+- [x] Feature L gap closed: live cool-refuge status (officer panel, DynamoDB table, live broadcast, citizen page skips full/closed)
+- [x] Feature A gap closed: CloudWatch activity on `/aws`
+- [x] Feature B: turn-by-turn walking steps (verified API fields; unit-tested parser)
+- [x] Feature I: Amazon Location static map in the SES HTML card
+- [x] New (opt-in): Bedrock batch briefs, CloudWatch Synthetics canary, Secrets Manager officer token, Firehose sensor history, WhatsApp alerts, Amazon Connect calls — all untested on real AWS
+- [ ] WhatsApp templates + Connect contact flow must be created by hand before switching those on (see handover log)
+- [ ] Move the WAF edge secret into Secrets Manager too
+- [ ] Feature F: real NDMA / city Heat Action Plan documents in the knowledge-base corpus
+- [ ] Feature J: QuickSight dashboard (manual connect to the Athena workgroup)
+- [ ] Deploy: no AWS credentials on this machine; nothing deployed
+
 
 - [x] Strands agent with 5 registered tools; numbers check; one retry; template fallback; PDF (EN+HI, shaping verified visually)
 - [x] Guardrail resource in template (topic + content filters)
@@ -81,6 +100,7 @@ Update this file whenever something changes state; keep the "Verified how" notes
 - [ ] `sam build` / `sam deploy` actually run; stack outputs recorded
 - [ ] SNS email subscription confirmed; test alert received
 - [ ] Polly Hindi voice (`Kajal`, neural) available in chosen region — verify
+- [ ] CloudWatch alarms publish to the same SNS topic as citizen heat alerts — split operator/citizen topics
 - [ ] Narrow Bedrock IAM from `Resource: '*'` once the model is chosen
 - [ ] Container image size / cold start measured; warm before demo
 - [ ] Upload processed data + model to S3 (`deploy.sh` does it; not exercised)

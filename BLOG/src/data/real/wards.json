@@ -1,0 +1,550 @@
+{
+ "new_delhi": {
+  "of_wards": 418,
+  "top": [
+   {
+    "ward_id": "Z1915",
+    "ward_name": "Zone 20-16",
+    "rank": 1,
+    "risk_score": 100.0,
+    "hazard": 0.836,
+    "exposure": 0.95,
+    "vulnerability": 0.952,
+    "population": 144005,
+    "lst_mean": 46.656
+   },
+   {
+    "ward_id": "Z1723",
+    "ward_name": "Zone 18-24",
+    "rank": 2,
+    "risk_score": 95.2,
+    "hazard": 0.751,
+    "exposure": 0.986,
+    "vulnerability": 0.973,
+    "population": 205204,
+    "lst_mean": 45.201
+   },
+   {
+    "ward_id": "Z1821",
+    "ward_name": "Zone 19-22",
+    "rank": 3,
+    "risk_score": 74.7,
+    "hazard": 0.566,
+    "exposure": 1.0,
+    "vulnerability": 0.999,
+    "population": 309713,
+    "lst_mean": 44.388
+   },
+   {
+    "ward_id": "Z1224",
+    "ward_name": "Zone 13-25",
+    "rank": 4,
+    "risk_score": 73.8,
+    "hazard": 0.655,
+    "exposure": 0.921,
+    "vulnerability": 0.926,
+    "population": 121714,
+    "lst_mean": 44.837
+   },
+   {
+    "ward_id": "Z1418",
+    "ward_name": "Zone 15-19",
+    "rank": 5,
+    "risk_score": 72.8,
+    "hazard": 0.596,
+    "exposure": 0.959,
+    "vulnerability": 0.963,
+    "population": 153758,
+    "lst_mean": 44.518
+   },
+   {
+    "ward_id": "Z1323",
+    "ward_name": "Zone 14-24",
+    "rank": 6,
+    "risk_score": 70.8,
+    "hazard": 0.617,
+    "exposure": 0.935,
+    "vulnerability": 0.929,
+    "population": 133353,
+    "lst_mean": 44.382
+   },
+   {
+    "ward_id": "Z1811",
+    "ward_name": "Zone 19-12",
+    "rank": 7,
+    "risk_score": 70.2,
+    "hazard": 0.726,
+    "exposure": 0.885,
+    "vulnerability": 0.826,
+    "population": 107269,
+    "lst_mean": 45.471
+   },
+   {
+    "ward_id": "Z1712",
+    "ward_name": "Zone 18-13",
+    "rank": 8,
+    "risk_score": 70.2,
+    "hazard": 0.568,
+    "exposure": 0.967,
+    "vulnerability": 0.967,
+    "population": 165651,
+    "lst_mean": 44.094
+   },
+   {
+    "ward_id": "Z1621",
+    "ward_name": "Zone 17-22",
+    "rank": 9,
+    "risk_score": 70.0,
+    "hazard": 0.533,
+    "exposure": 0.998,
+    "vulnerability": 0.996,
+    "population": 258288,
+    "lst_mean": 44.013
+   },
+   {
+    "ward_id": "Z1722",
+    "ward_name": "Zone 18-23",
+    "rank": 10,
+    "risk_score": 69.2,
+    "hazard": 0.573,
+    "exposure": 0.938,
+    "vulnerability": 0.975,
+    "population": 133942,
+    "lst_mean": 44.523
+   },
+   {
+    "ward_id": "Z1107",
+    "ward_name": "Zone 12-8",
+    "rank": 11,
+    "risk_score": 68.1,
+    "hazard": 0.612,
+    "exposure": 0.909,
+    "vulnerability": 0.926,
+    "population": 118092,
+    "lst_mean": 44.957
+   },
+   {
+    "ward_id": "Z1510",
+    "ward_name": "Zone 16-11",
+    "rank": 12,
+    "risk_score": 67.5,
+    "hazard": 0.701,
+    "exposure": 0.842,
+    "vulnerability": 0.865,
+    "population": 98121,
+    "lst_mean": 45.332
+   }
+  ]
+ },
+ "mumbai": {
+  "of_wards": 153,
+  "top": [
+   {
+    "ward_id": "Z1106",
+    "ward_name": "Zone 12-7",
+    "rank": 1,
+    "risk_score": 100.0,
+    "hazard": 0.991,
+    "exposure": 1.0,
+    "vulnerability": 0.976,
+    "population": 325444,
+    "lst_mean": 46.254
+   },
+   {
+    "ward_id": "Z1005",
+    "ward_name": "Zone 11-6",
+    "rank": 2,
+    "risk_score": 80.5,
+    "hazard": 0.99,
+    "exposure": 0.908,
+    "vulnerability": 0.866,
+    "population": 190540,
+    "lst_mean": 45.511
+   },
+   {
+    "ward_id": "Z1006",
+    "ward_name": "Zone 11-7",
+    "rank": 3,
+    "risk_score": 80.0,
+    "hazard": 0.924,
+    "exposure": 0.961,
+    "vulnerability": 0.872,
+    "population": 212640,
+    "lst_mean": 43.824
+   },
+   {
+    "ward_id": "Z0303",
+    "ward_name": "Zone 4-4",
+    "rank": 4,
+    "risk_score": 77.9,
+    "hazard": 0.95,
+    "exposure": 0.882,
+    "vulnerability": 0.899,
+    "population": 188787,
+    "lst_mean": 44.645
+   },
+   {
+    "ward_id": "Z0403",
+    "ward_name": "Zone 5-4",
+    "rank": 5,
+    "risk_score": 74.6,
+    "hazard": 0.784,
+    "exposure": 0.98,
+    "vulnerability": 0.939,
+    "population": 236039,
+    "lst_mean": 42.448
+   },
+   {
+    "ward_id": "Z1107",
+    "ward_name": "Zone 12-8",
+    "rank": 6,
+    "risk_score": 73.6,
+    "hazard": 0.914,
+    "exposure": 0.935,
+    "vulnerability": 0.834,
+    "population": 198686,
+    "lst_mean": 44.158
+   },
+   {
+    "ward_id": "Z1205",
+    "ward_name": "Zone 13-6",
+    "rank": 7,
+    "risk_score": 71.7,
+    "hazard": 0.757,
+    "exposure": 0.993,
+    "vulnerability": 0.923,
+    "population": 241016,
+    "lst_mean": 42.195
+   },
+   {
+    "ward_id": "Z0804",
+    "ward_name": "Zone 9-5",
+    "rank": 8,
+    "risk_score": 68.9,
+    "hazard": 0.83,
+    "exposure": 0.928,
+    "vulnerability": 0.865,
+    "population": 197105,
+    "lst_mean": 42.083
+   },
+   {
+    "ward_id": "Z1208",
+    "ward_name": "Zone 13-9",
+    "rank": 9,
+    "risk_score": 68.4,
+    "hazard": 0.932,
+    "exposure": 0.922,
+    "vulnerability": 0.77,
+    "population": 196621,
+    "lst_mean": 43.726
+   },
+   {
+    "ward_id": "Z0903",
+    "ward_name": "Zone 10-4",
+    "rank": 10,
+    "risk_score": 64.7,
+    "hazard": 0.669,
+    "exposure": 0.987,
+    "vulnerability": 0.948,
+    "population": 236400,
+    "lst_mean": 40.925
+   },
+   {
+    "ward_id": "Z1304",
+    "ward_name": "Zone 14-5",
+    "rank": 11,
+    "risk_score": 63.8,
+    "hazard": 0.89,
+    "exposure": 0.85,
+    "vulnerability": 0.816,
+    "population": 181114,
+    "lst_mean": 43.09
+   },
+   {
+    "ward_id": "Z1705",
+    "ward_name": "Zone 18-6",
+    "rank": 12,
+    "risk_score": 62.7,
+    "hazard": 0.916,
+    "exposure": 0.869,
+    "vulnerability": 0.762,
+    "population": 187806,
+    "lst_mean": 43.298
+   }
+  ]
+ },
+ "jaipur": {
+  "of_wards": 128,
+  "top": [
+   {
+    "ward_id": "Z0901",
+    "ward_name": "Zone 10-2",
+    "rank": 1,
+    "risk_score": 100.0,
+    "hazard": 0.744,
+    "exposure": 0.953,
+    "vulnerability": 0.877,
+    "population": 55632,
+    "lst_mean": 49.512
+   },
+   {
+    "ward_id": "Z1102",
+    "ward_name": "Zone 12-3",
+    "rank": 2,
+    "risk_score": 94.4,
+    "hazard": 0.742,
+    "exposure": 0.93,
+    "vulnerability": 0.851,
+    "population": 52239,
+    "lst_mean": 49.509
+   },
+   {
+    "ward_id": "Z1001",
+    "ward_name": "Zone 11-2",
+    "rank": 3,
+    "risk_score": 88.7,
+    "hazard": 0.747,
+    "exposure": 0.828,
+    "vulnerability": 0.892,
+    "population": 40741,
+    "lst_mean": 49.492
+   },
+   {
+    "ward_id": "Z1204",
+    "ward_name": "Zone 13-5",
+    "rank": 4,
+    "risk_score": 87.1,
+    "hazard": 0.558,
+    "exposure": 0.984,
+    "vulnerability": 0.987,
+    "population": 63602,
+    "lst_mean": 48.833
+   },
+   {
+    "ward_id": "Z0801",
+    "ward_name": "Zone 9-2",
+    "rank": 5,
+    "risk_score": 85.5,
+    "hazard": 0.772,
+    "exposure": 0.883,
+    "vulnerability": 0.78,
+    "population": 48299,
+    "lst_mean": 49.63
+   },
+   {
+    "ward_id": "Z0701",
+    "ward_name": "Zone 8-2",
+    "rank": 6,
+    "risk_score": 85.3,
+    "hazard": 0.706,
+    "exposure": 0.922,
+    "vulnerability": 0.815,
+    "population": 50997,
+    "lst_mean": 49.408
+   },
+   {
+    "ward_id": "Z1003",
+    "ward_name": "Zone 11-4",
+    "rank": 7,
+    "risk_score": 82.5,
+    "hazard": 0.548,
+    "exposure": 0.969,
+    "vulnerability": 0.965,
+    "population": 62111,
+    "lst_mean": 48.523
+   },
+   {
+    "ward_id": "Z1205",
+    "ward_name": "Zone 13-6",
+    "rank": 8,
+    "risk_score": 73.6,
+    "hazard": 0.952,
+    "exposure": 0.727,
+    "vulnerability": 0.662,
+    "population": 23880,
+    "lst_mean": 51.175
+   },
+   {
+    "ward_id": "Z1203",
+    "ward_name": "Zone 13-4",
+    "rank": 9,
+    "risk_score": 71.7,
+    "hazard": 0.575,
+    "exposure": 0.891,
+    "vulnerability": 0.87,
+    "population": 48659,
+    "lst_mean": 48.805
+   },
+   {
+    "ward_id": "Z1004",
+    "ward_name": "Zone 11-5",
+    "rank": 10,
+    "risk_score": 70.7,
+    "hazard": 0.747,
+    "exposure": 0.797,
+    "vulnerability": 0.739,
+    "population": 36708,
+    "lst_mean": 48.911
+   },
+   {
+    "ward_id": "Z1103",
+    "ward_name": "Zone 12-4",
+    "rank": 11,
+    "risk_score": 69.5,
+    "hazard": 0.477,
+    "exposure": 0.961,
+    "vulnerability": 0.945,
+    "population": 59821,
+    "lst_mean": 48.206
+   },
+   {
+    "ward_id": "Z1002",
+    "ward_name": "Zone 11-3",
+    "rank": 12,
+    "risk_score": 67.3,
+    "hazard": 0.517,
+    "exposure": 0.938,
+    "vulnerability": 0.863,
+    "population": 53425,
+    "lst_mean": 48.427
+   }
+  ]
+ },
+ "bengaluru": {
+  "of_wards": 207,
+  "top": [
+   {
+    "ward_id": "Z1002",
+    "ward_name": "Zone 11-3",
+    "rank": 1,
+    "risk_score": 100.0,
+    "hazard": 0.949,
+    "exposure": 0.995,
+    "vulnerability": 0.995,
+    "population": 160901,
+    "lst_mean": 41.97
+   },
+   {
+    "ward_id": "Z1003",
+    "ward_name": "Zone 11-4",
+    "rank": 2,
+    "risk_score": 88.9,
+    "hazard": 0.855,
+    "exposure": 0.99,
+    "vulnerability": 0.986,
+    "population": 147595,
+    "lst_mean": 41.229
+   },
+   {
+    "ward_id": "Z1103",
+    "ward_name": "Zone 12-4",
+    "rank": 3,
+    "risk_score": 83.2,
+    "hazard": 0.847,
+    "exposure": 0.971,
+    "vulnerability": 0.951,
+    "population": 139470,
+    "lst_mean": 41.416
+   },
+   {
+    "ward_id": "Z0902",
+    "ward_name": "Zone 10-3",
+    "rank": 4,
+    "risk_score": 78.3,
+    "hazard": 0.925,
+    "exposure": 0.923,
+    "vulnerability": 0.862,
+    "population": 128775,
+    "lst_mean": 41.496
+   },
+   {
+    "ward_id": "Z0901",
+    "ward_name": "Zone 10-2",
+    "rank": 5,
+    "risk_score": 67.9,
+    "hazard": 0.811,
+    "exposure": 0.918,
+    "vulnerability": 0.857,
+    "population": 128649,
+    "lst_mean": 40.904
+   },
+   {
+    "ward_id": "Z0903",
+    "ward_name": "Zone 10-4",
+    "rank": 6,
+    "risk_score": 67.3,
+    "hazard": 0.833,
+    "exposure": 0.908,
+    "vulnerability": 0.836,
+    "population": 126213,
+    "lst_mean": 40.883
+   },
+   {
+    "ward_id": "Z1102",
+    "ward_name": "Zone 12-3",
+    "rank": 7,
+    "risk_score": 66.9,
+    "hazard": 0.887,
+    "exposure": 0.894,
+    "vulnerability": 0.793,
+    "population": 117400,
+    "lst_mean": 41.46
+   },
+   {
+    "ward_id": "Z0806",
+    "ward_name": "Zone 9-7",
+    "rank": 8,
+    "risk_score": 66.6,
+    "hazard": 0.694,
+    "exposure": 0.961,
+    "vulnerability": 0.938,
+    "population": 136700,
+    "lst_mean": 40.38
+   },
+   {
+    "ward_id": "Z0805",
+    "ward_name": "Zone 9-6",
+    "rank": 9,
+    "risk_score": 65.0,
+    "hazard": 0.634,
+    "exposure": 0.981,
+    "vulnerability": 0.982,
+    "population": 143140,
+    "lst_mean": 40.293
+   },
+   {
+    "ward_id": "Z1001",
+    "ward_name": "Zone 11-2",
+    "rank": 10,
+    "risk_score": 64.0,
+    "hazard": 0.93,
+    "exposure": 0.836,
+    "vulnerability": 0.773,
+    "population": 104769,
+    "lst_mean": 41.886
+   },
+   {
+    "ward_id": "Z1202",
+    "ward_name": "Zone 13-3",
+    "rank": 11,
+    "risk_score": 60.9,
+    "hazard": 0.784,
+    "exposure": 0.889,
+    "vulnerability": 0.822,
+    "population": 115762,
+    "lst_mean": 40.87
+   },
+   {
+    "ward_id": "Z1108",
+    "ward_name": "Zone 12-9",
+    "rank": 12,
+    "risk_score": 58.1,
+    "hazard": 0.721,
+    "exposure": 0.865,
+    "vulnerability": 0.876,
+    "population": 108674,
+    "lst_mean": 40.615
+   }
+  ]
+ }
+}

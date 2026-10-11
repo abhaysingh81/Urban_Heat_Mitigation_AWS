@@ -102,10 +102,10 @@ def set_report_status(report_id: str, status: str, actor: str = "officer", note:
     return doc
 
 
-def list_reports(city_id: str) -> list[dict]:
-    if aws.REPORTS_TABLE:
+def _list(table_name: str | None, kind: str, city_id: str) -> list[dict]:
+    if table_name:
         from boto3.dynamodb.conditions import Attr
-        table, items, kwargs = aws.table(aws.REPORTS_TABLE), [], {"FilterExpression": Attr("city_id").eq(city_id)}
+        table, items, kwargs = aws.table(table_name), [], {"FilterExpression": Attr("city_id").eq(city_id)}
         while True:  # a scan returns at most 1 MB per call
             page = table.scan(**kwargs)
             items += page.get("Items", [])
@@ -114,11 +114,39 @@ def list_reports(city_id: str) -> list[dict]:
             kwargs["ExclusiveStartKey"] = page["LastEvaluatedKey"]
         return [json.loads(i["body"]) for i in items]
     out = []
-    for f in _dir("reports").glob("*.json"):
+    for f in _dir(kind).glob("*.json"):
         d = json.loads(f.read_text())
         if d.get("city_id") == city_id:
             out.append(d)
     return out
+
+
+def list_reports(city_id: str) -> list[dict]:
+    return _list(aws.REPORTS_TABLE, "reports", city_id)
+
+
+# ── cool-refuge live status (Feature L) ──────────────────────
+# A ward officer marks a cool refuge (hospital, clinic, shelter, community centre, library)
+# open / busy / full / closed. One item per refuge; the last 20 changes are kept as an audit.
+SHELTER_STATUSES = ("open", "busy", "full", "closed")
+
+
+def save_shelter_status(city_id: str, spot_id: str, status: str, actor: str = "officer", note: str = "") -> dict:
+    if status not in SHELTER_STATUSES:
+        raise ValueError(f"status must be one of {SHELTER_STATUSES}")
+    key = f"{city_id}:{spot_id}"
+    doc = _get(aws.SHELTERS_TABLE, "shelters", key) or {"id": key, "city_id": city_id, "spot_id": spot_id,
+                                                         "history": []}
+    doc.update({"status": status, "updated_at": _now(), "ts": int(time.time()), "actor": actor[:60]})
+    doc["history"] = (doc.get("history", []) + [{"at": doc["updated_at"], "status": status, "actor": actor[:60],
+                                                 "note": note[:200]}])[-20:]
+    _put(aws.SHELTERS_TABLE, "shelters", doc)
+    return doc
+
+
+def list_shelter_statuses(city_id: str) -> dict[str, dict]:
+    """{spot_id: status doc} for the city."""
+    return {d["spot_id"]: d for d in _list(aws.SHELTERS_TABLE, "shelters", city_id)}
 
 
 # ── street sensors (Feature G: AWS IoT Core) ─────────────────

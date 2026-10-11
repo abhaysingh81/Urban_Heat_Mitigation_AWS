@@ -4,7 +4,7 @@ import os
 import json
 import time
 from datetime import datetime, timezone
-from api import auth, aws, email_alerts, live, net, translate
+from api import auth, aws, email_alerts, live, net, translate, voice_calls, whatsapp
 
 router = APIRouter(prefix="/api/v1/system", tags=["system"])
 
@@ -54,6 +54,59 @@ def get_sns_counts():
     except Exception:
         return 'unavailable'
 
+def _metric_query(qid: str, namespace: str, name: str, dims: dict, stat: str, period: int) -> dict:
+    return {"Id": qid, "ReturnData": True, "MetricStat": {
+        "Metric": {"Namespace": namespace, "MetricName": name,
+                   "Dimensions": [{"Name": k, "Value": v} for k, v in dims.items()]},
+        "Period": period, "Stat": stat}}
+
+
+def get_cloudwatch_activity() -> dict | str:
+    """Recent activity from Amazon CloudWatch (cached 5 min): API requests, errors, p95 latency and
+    throttles over 24 h, plus alerts sent and failed refreshes over 7 days for the default city.
+    'unavailable' outside Lambda or when the call fails. Only numbers are returned."""
+    fn = os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+    if not fn:
+        return 'unavailable'
+    now = time.time()
+    if "cw" in _cache and now - _cache["cw_time"] < 300:
+        return _cache["cw"]
+    from datetime import timedelta
+    from pipeline.config import DEFAULT_CITY
+    end = datetime.now(timezone.utc)
+    lam = {"FunctionName": fn}
+    city = {"City": DEFAULT_CITY}
+
+    def fetch(queries, days):
+        res = aws.client("cloudwatch").get_metric_data(
+            MetricDataQueries=queries, StartTime=end - timedelta(days=days), EndTime=end)
+        return {r["Id"]: r.get("Values", []) for r in res.get("MetricDataResults", [])}
+
+    try:
+        day = fetch([_metric_query("requests", "AWS/Lambda", "Invocations", lam, "Sum", 3600),
+                     _metric_query("errors", "AWS/Lambda", "Errors", lam, "Sum", 3600),
+                     _metric_query("throttles", "AWS/Lambda", "Throttles", lam, "Sum", 3600),
+                     _metric_query("p95", "AWS/Lambda", "Duration", lam, "p95", 86400)], 1)
+        week = fetch([_metric_query("alerts", "HeatRelief", "AlertsFired", city, "Sum", 86400),
+                      _metric_query("refresh_failed", "HeatRelief", "RefreshFailed", city, "Sum", 86400),
+                      _metric_query("refresh_ok", "HeatRelief", "RefreshOk", city, "Sum", 86400)], 7)
+        total = lambda vals: int(sum(vals))
+        out = {
+            "api_requests_24h": total(day.get("requests", [])),
+            "api_errors_24h": total(day.get("errors", [])),
+            "api_throttles_24h": total(day.get("throttles", [])),
+            "api_p95_ms_24h": round(max(day.get("p95", []) or [0]), 1),
+            "alerts_sent_7d": total(week.get("alerts", [])),
+            "daily_refresh_ok_7d": total(week.get("refresh_ok", [])),
+            "daily_refresh_failed_7d": total(week.get("refresh_failed", [])),
+            "city": DEFAULT_CITY,
+        }
+    except Exception:
+        out = 'unavailable'
+    _cache["cw"], _cache["cw_time"] = out, now
+    return out
+
+
 def features() -> dict:
     """Which optional AWS services this deployment has switched on (names and counts only)."""
     return {
@@ -67,6 +120,14 @@ def features() -> dict:
         "street_sensors": bool(os.environ.get("SENSOR_LATEST_TABLE")),
         "waf": bool(net.edge_secret()),
         "analytics": bool(os.environ.get("ANALYTICS_ENABLED") == "true"),
+        "cool_refuge_status": True,
+        "static_alert_map": os.environ.get("STATIC_MAP_ENABLED") == "true",
+        "batch_briefs": bool(os.environ.get("BATCH_ROLE_ARN")) or os.environ.get("BATCH_BRIEFS_ENABLED") == "true",
+        "uptime_canary": os.environ.get("CANARY_ENABLED") == "true",
+        "sensor_history": os.environ.get("SENSOR_HISTORY_ENABLED") == "true",
+        "officer_token_in_secrets_manager": bool(os.environ.get("OFFICER_TOKEN_SECRET_ARN")),
+        "whatsapp_alerts": whatsapp.enabled(),
+        "phone_calls": voice_calls.enabled(),
     }
 
 
@@ -83,6 +144,8 @@ async def client_config(response: Response):
         "live": {"ws_url": os.environ.get("WS_PUBLIC_URL") or None},
         "translate": {"languages": translate.languages()},
         "sensors": bool(os.environ.get("SENSOR_LATEST_TABLE")) or not aws.DATA_BUCKET,
+        "whatsapp": whatsapp.enabled(),
+        "voice_calls": voice_calls.enabled(),
     }
 
 
@@ -146,5 +209,6 @@ async def system_status(response: Response):
         "storage": storage,
         "alerts": alerts,
         "daily_job": daily_job,
+        "activity": get_cloudwatch_activity(),
         "model": model_card or 'unavailable'
     }

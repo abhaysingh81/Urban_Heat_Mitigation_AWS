@@ -58,6 +58,11 @@ def tool_ward_risk(city_id: str, ward_id: str) -> dict:
 
 def tool_ward_plan(city_id: str, ward_id: str, budget_lakh: float, equity_weight: float) -> dict:
     plan = optimize(PlanRequest(city_id=city_id, budget_lakh=budget_lakh, equity_weight=equity_weight))
+    return summarise_ward_plan(plan, ward_id, budget_lakh)
+
+
+def summarise_ward_plan(plan: dict, ward_id: str, budget_lakh: float) -> dict:
+    """One ward's part of a city plan (shared with the nightly batch, which optimises once per city)."""
     items = [i for i in plan["items"] if i["ward_id"] == ward_id]
     by_type: dict[str, dict] = {}
     for i in items:
@@ -205,7 +210,9 @@ def template_brief(facts: dict) -> dict:
             hi.append(f"- {HI_ACTION.get(a['key'], a['action'])}: {a['count']} स्थान, ₹{a['cost_lakh']:,.0f} लाख{cool_hi}।")
     if spots:
         s = spots[0]
-        en.append(f"Nearest cooling place: {s['name']} ({s['type'].replace('_', ' ')}), about {s['distance_m']} m away.")
+        kind = s['type'].replace('_', ' ')
+        label = s['name'] if s['name'].lower() == kind.lower() else f"{s['name']} ({kind})"
+        en.append(f"Nearest cooling place: {label}, about {s['distance_m']} m away.")
         hi.append(f"सबसे नज़दीकी ठंडी जगह: {s['name']}, लगभग {s['distance_m']} मीटर दूर।")
     en.append("Safety: drink water often, avoid outdoor work at midday, check on older people and children. "
               "For heatstroke call 112 or 108.")

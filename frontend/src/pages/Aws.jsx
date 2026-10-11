@@ -134,6 +134,21 @@ export default function Aws() {
         </div>
 
         <div className="glass-panel dec-card">
+          <h3>Activity (CloudWatch)</h3>
+          {data ? (
+            data.activity === 'unavailable' || !data.activity ? <div>unavailable (shown when running on AWS Lambda)</div> : (
+              <ul>
+                <li>API requests, last 24 h: {data.activity.api_requests_24h}</li>
+                <li>API errors / throttles, last 24 h: {data.activity.api_errors_24h} / {data.activity.api_throttles_24h}</li>
+                <li>API p95 latency, last 24 h: {data.activity.api_p95_ms_24h} ms</li>
+                <li>Heat alerts sent, last 7 days ({data.activity.city}): {data.activity.alerts_sent_7d}</li>
+                <li>Daily refresh ok / failed, last 7 days: {data.activity.daily_refresh_ok_7d} / {data.activity.daily_refresh_failed_7d}</li>
+              </ul>
+            )
+          ) : <div>Loading...</div>}
+        </div>
+
+        <div className="glass-panel dec-card">
           <h3>Daily Job</h3>
           {data ? (
             data.daily_job === 'unavailable' ? <div>unavailable</div> : (
