@@ -6,7 +6,7 @@ import numpy as np
 from rasterio.enums import Resampling
 
 from pipeline.real.gridspec import GridSpec
-from pipeline.real.stac import open_catalog, read_to_grid, search
+from pipeline.real.stac import asset_href, open_catalog, read_to_grid, search
 
 FACTOR = 10  # 50 m
 
@@ -18,7 +18,7 @@ def build(spec: GridSpec) -> dict:
         raise RuntimeError(f"No DEM tiles for {spec.city_id}")
     dem = np.full(spec.fine_shape(FACTOR), np.nan, dtype=np.float32)
     for item in items:
-        tile = read_to_grid(item.assets["data"].href, spec, FACTOR,
+        tile = read_to_grid(asset_href(item, "data"), spec, FACTOR,
                             Resampling.bilinear, nodata_in=None, overview=None)
         fill = np.isnan(dem) & ~np.isnan(tile)
         dem[fill] = tile[fill]

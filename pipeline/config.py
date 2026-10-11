@@ -501,7 +501,7 @@ def data_version(city_id: str) -> tuple:
     (features, model predictions, boundary mask), so caches never serve stale data."""
     d = city_processed_dir(city_id)
     files = ("features_real.parquet", "predictions_real.parquet", "city_mask.json", "boundary.geojson",
-             "grid.geojson")
+             "grid.geojson", "area_names.json")
     return (city_id,) + tuple((d / f).stat().st_mtime if (d / f).exists() else 0 for f in files)
 
 
@@ -521,3 +521,19 @@ def city_cooling_spots_file(city_id: str) -> Path:
 
 def city_data_card_file(city_id: str) -> Path:
     return city_processed_dir(city_id) / "data_card.json"
+
+
+def city_area_names_file(city_id: str) -> Path:
+    """Nearest-locality name per grid cell (pipeline/real/areas.py)."""
+    return city_processed_dir(city_id) / "area_names.json"
+
+
+def load_area_names(city_id: str) -> dict:
+    """{grid_id: area name}; empty when the file has not been built."""
+    import json
+    f = city_area_names_file(city_id)
+    if not f.exists():
+        return {}
+    d = json.loads(f.read_text())
+    names = d.get("names", [])
+    return {g: names[i] for g, i in d.get("cells", {}).items()}

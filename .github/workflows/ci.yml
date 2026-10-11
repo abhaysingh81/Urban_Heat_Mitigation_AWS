@@ -25,3 +25,4 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install cfn-lint && cfn-lint infra/template.yaml
+      - run: cfn-lint --regions us-west-2 -t infra/pipeline-template.yaml

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
-import { Map, BarChart2, Layers, ChevronDown, Sun, Moon, Info, PanelLeftClose, PanelLeftOpen, ClipboardList, FileText, Smartphone, Languages } from 'lucide-react';
+import { Map, BarChart2, Layers, ChevronDown, Sun, Moon, Info, PanelLeftClose, PanelLeftOpen, ClipboardList, FileText, Smartphone, Languages, Inbox } from 'lucide-react';
 import './App.css';
 import './pages/Decision.css';
 import { API_BASE } from './api';
@@ -17,6 +17,8 @@ import ScenarioLab from './pages/ScenarioLab';
 import WardPlanner from './pages/WardPlanner';
 import ModelCardView from './pages/ModelCardView';
 import CitizenView from './pages/CitizenView';
+import Aws from './pages/Aws';
+import FieldReports from './pages/FieldReports';
 
 function App() {
   const { theme, toggleTheme } = useTheme();
@@ -98,11 +100,20 @@ function App() {
             >
               {loadingCities && <option>Loading cities…</option>}
               {!loadingCities && cities.length === 0 && <option>No cities available</option>}
-              {cities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}{c.country === 'India' ? '' : `, ${c.country}`}
-                </option>
-              ))}
+              {!loadingCities && cities.length > 0 && (
+                <>
+                  <optgroup label="Real satellite data">
+                    {cities.filter(c => c.data_kind === 'real').map(c => (
+                      <option key={c.id} value={c.id}>{c.name}{c.country === 'India' ? '' : `, ${c.country}`}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Synthetic preview">
+                    {cities.filter(c => c.data_kind !== 'real').map(c => (
+                      <option key={c.id} value={c.id}>{c.name}{c.country === 'India' ? '' : `, ${c.country}`}</option>
+                    ))}
+                  </optgroup>
+                </>
+              )}
             </select>
             <ChevronDown size={16} className="city-selector-chevron" />
           </div>
@@ -132,6 +143,16 @@ function App() {
           <NavLink to="/model" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
             <FileText size={20} />
             <span>{t('nav_model')}</span>
+          </NavLink>
+
+          <NavLink to="/reports" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <Inbox size={20} />
+            <span>{t('nav_reports')}</span>
+          </NavLink>
+
+          <NavLink to="/aws" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+            <Layers size={20} />
+            <span>{t('nav_aws')}</span>
           </NavLink>
 
           <NavLink to={`/citizen?city=${selectedCity || ''}`} className="nav-item">
@@ -201,6 +222,8 @@ function App() {
             <Route path="/risk" element={<Navigate to={`/planner${location.search}`} replace />} />
             <Route path="/plan" element={<Navigate to={`/planner${location.search}`} replace />} />
             <Route path="/model" element={<ModelCardView />} />
+            <Route path="/reports" element={<FieldReports key={selectedCity} city={selectedCity} cityInfo={activeCity} />} />
+            <Route path="/aws" element={<Aws />} />
           </Routes>
         )}
 

@@ -7,6 +7,8 @@ import CityMap from '../components/CityMap';
 import { riskRgb, coolRgb } from '../components/mapColors';
 import ConditionsPanel from '../components/ConditionsPanel';
 import { DEFAULT_CONDITIONS } from '../components/conditionsDefaults';
+import StaffSignIn from '../components/StaffSignIn';
+import { loadConfig, staffHeaders } from '../platform';
 import './Decision.css';
 import './Lab.css';
 
@@ -50,6 +52,10 @@ export default function WardPlanner({ city, cityInfo }) {
   const [plan, setPlan] = useState(null);
   const [status, setStatus] = useState(null);
   const [token, setToken] = useState(() => { try { return sessionStorage.getItem('officer-token') || ''; } catch { return ''; } });
+  // how plan approval is protected on this deployment: Cognito sign-in, a shared token, or open (local)
+  const [authCfg, setAuthCfg] = useState(null);
+  const [, setStaff] = useState(null);   // re-render after sign-in / sign-out
+  useEffect(() => { loadConfig().then((c) => setAuthCfg(c.auth)); }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [briefWard, setBriefWard] = useState('');
@@ -114,7 +120,7 @@ export default function WardPlanner({ city, cityInfo }) {
   const setPlanStatus = async (s) => {
     try { sessionStorage.setItem('officer-token', token); } catch { /* storage may be blocked */ }
     const r = await fetch(`${API_BASE}/api/v1/plans/${plan.plan_id}/status`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Officer-Token': token } : {}) },
+      method: 'PUT', headers: { 'Content-Type': 'application/json', ...staffHeaders(token) },
       body: JSON.stringify({ status: s }) });
     const d = await r.json();
     if (r.ok) setStatus(d.status); else setError(d.detail || 'Status change failed');
@@ -271,9 +277,13 @@ export default function WardPlanner({ city, cityInfo }) {
                 <span key={b} className={`band ${b}`}>{b}: {ic.wards_by_band.before[b] || 0} → <b>{ic.wards_by_band.after[b] || 0}</b></span>))}
                 <span className="band">people in hotspots: {ic.people_in_hotspots.before.toLocaleString()} → <b>{ic.people_in_hotspots.after.toLocaleString()}</b></span></div>
               <ul className="dec-note" style={{ paddingLeft: 18 }}>{ic.assumptions.map((a) => <li key={a}>{a}</li>)}</ul>
+              {authCfg?.mode === 'cognito' && (<>
+                <div className="dec-note">{t('planner_sign_in')}</div>
+                <StaffSignIn auth={authCfg} onChange={setStaff} />
+              </>)}
               <div className="btn-row" style={{ alignItems: 'center' }}>
                 <span className="pill">{t('status')}: {status}</span>
-                <input className="num" style={{ width: 160 }} type="password" placeholder="Officer token" value={token} onChange={(e) => setToken(e.target.value)} />
+                {authCfg?.mode === 'token' && <input className="num" style={{ width: 160 }} type="password" placeholder="Officer token" value={token} onChange={(e) => setToken(e.target.value)} />}
                 {status === 'draft' && <button className="btn-ghost" onClick={() => setPlanStatus('approved')}>{t('approve')}</button>}
                 {status === 'approved' && <button className="btn-ghost" onClick={() => setPlanStatus('implemented')}>{t('mark_done')}</button>}
                 <a className="btn-ghost" href={`${API_BASE}/api/v1/planner/plan/${plan.plan_id}/work-orders.csv`}>Work orders CSV</a>
@@ -335,6 +345,7 @@ export default function WardPlanner({ city, cityInfo }) {
               </div>
               {brief && (<>
                 <div className="dec-note" style={{ marginTop: 8 }}>{t('source')}: {brief.source}{brief.note ? ` (${brief.note})` : ''} · numbers verified: {String(brief.numbers_verified)}</div>
+                {brief.sources?.length > 0 && <div className="dec-note">{t('guidance_sources')}: {brief.sources.map((n, i) => `[S${i + 1}] ${n}`).join('; ')}</div>}
                 <div className="brief-box">{brief.brief_en}</div><div className="brief-box">{brief.brief_hi}</div></>)}
             </div>
           </>)}

@@ -6,3 +6,9 @@ data/runtime
 venv
 **/__pycache__
 .aws-sam
+tmpenv
+tests
+docs
+.github
+.pytest_cache
+*.pdf

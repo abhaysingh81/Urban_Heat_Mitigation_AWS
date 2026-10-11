@@ -1,6 +1,6 @@
 // Minimal offline support for the citizen page: app shell cache-first, citizen API network-first
 // with the last good answer as fallback (weak networks).
-const SHELL = 'heatrelief-shell-v1';
+const SHELL = 'heatrelief-shell-v2';
 const API = 'heatrelief-api-v1';
 
 self.addEventListener('install', (e) => { self.skipWaiting(); e.waitUntil(caches.open(SHELL).then((c) => c.addAll(['/', '/favicon.svg']))); });
@@ -16,6 +16,9 @@ self.addEventListener('fetch', (e) => {
       .catch(() => caches.match(req)));
     return;
   }
+  // The API can share the site's address (CloudFront in front of it): never keep its answers in
+  // the app-shell cache, which is cache-first and would serve them stale forever.
+  if (url.pathname.startsWith('/api/') || url.pathname === '/health') return;
   if (url.origin === location.origin) {
     e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => {
       if (res.ok) { const copy = res.clone(); caches.open(SHELL).then((c) => c.put(req, copy)); }

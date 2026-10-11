@@ -17,6 +17,7 @@ import pandas as pd
 from pipeline.config import (
     city_features_file, city_grid_file, city_processed_dir, city_real_features_file,
     is_real_city, load_city_mask, city_boundary_file, data_version, HOTSPOT_TIERS,
+    city_area_names_file, load_area_names,
 )
 
 GRID_PROPS = [
@@ -95,6 +96,7 @@ def _real_grid(city_id: str, version: tuple) -> dict:
     cols = [c for c in GRID_PROPS + ["lst_std", "n_scenes", "lst_pred", "lst_q10", "lst_q90",
                                      "ward_id", "ward_name"] if c in df.columns]
     mask = load_city_mask(city_id)
+    areas = load_area_names(city_id)
     feats = []
     for feat in geo["features"]:
         gid = feat["properties"]["grid_id"]
@@ -109,6 +111,8 @@ def _real_grid(city_id: str, version: tuple) -> dict:
                  "data_kind": "real"}
         props.update({c: _clean(row[c]) if c not in ("ward_id", "ward_name") else row[c]
                       for c in cols})
+        if gid in areas:
+            props["area_name"] = areas[gid]
         feats.append({"type": "Feature", "geometry": geometry, "properties": props})
     out = {"type": "FeatureCollection", "features": feats}
     bf = city_boundary_file(city_id)
@@ -120,5 +124,18 @@ def _real_grid(city_id: str, version: tuple) -> dict:
 def grid_geojson(city_id: str) -> dict:
     if is_real(city_id):
         return _real_grid(city_id, data_version(city_id))
+    f = city_area_names_file(city_id)
+    return _preview_grid(city_id, f.stat().st_mtime if f.exists() else 0)
+
+
+@lru_cache(maxsize=8)
+def _preview_grid(city_id: str, areas_version: float) -> dict:
+    """Synthetic-preview grid, with the area name added to each cell when available."""
     with open(city_grid_file(city_id)) as f:
-        return json.load(f)
+        geo = json.load(f)
+    areas = load_area_names(city_id)
+    for feat in geo["features"]:
+        name = areas.get(feat["properties"].get("grid_id"))
+        if name:
+            feat["properties"]["area_name"] = name
+    return geo

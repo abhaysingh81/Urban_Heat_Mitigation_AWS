@@ -22,3 +22,5 @@ uharfbuzz>=0.39.0
 affine>=2.4.0
 # Heat Officer agent (optional at runtime; template brief is used if Bedrock is not configured)
 strands-agents>=1.0.0
+# Cognito access-token verification (api/auth.py)
+PyJWT[crypto]>=2.8.0

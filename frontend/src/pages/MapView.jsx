@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { GeoJsonLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import BaseMap from '../components/BaseMap';
+
 import { Info } from 'lucide-react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { API_BASE } from '../api';
+import { useLang } from '../i18n';
 import LstExplainerModal from '../components/LstExplainerModal';
 import ServerWakingNotice from '../components/ServerWakingNotice';
 import ValidationBadge from '../components/ValidationBadge';
@@ -19,7 +21,42 @@ const TIER_COLORS = {
   cool: [41, 121, 255]
 };
 
+const escapeHtml = (v) => String(v).replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Hover card for one heat-grid cell. The area name (nearest OpenStreetMap locality) comes with
+// the grid payload as `area_name`; the analysis zone is the fallback where no place is nearby.
+function cellTooltip(p) {
+  const lines = [];
+  const area = p.area_name || p.ward_name;
+  if (area) lines.push(`<b>${escapeHtml(area)}</b>`);
+  if (p.area_name && p.ward_name) lines.push(`Analysis zone: ${escapeHtml(p.ward_name)}`);
+  lines.push(`Cell: ${escapeHtml(p.grid_id)}`);
+  if (p.lst_mean != null) {
+    lines.push(`LST: ${p.lst_mean.toFixed(1)}°C${p.lst_source === 'predicted' ? ' (estimate)' : ''}`);
+  }
+  if (p.delta_above_mean != null) {
+    lines.push(`UHI Intensity: ${p.delta_above_mean > 0 ? '+' : ''}${p.delta_above_mean.toFixed(1)}°C`);
+  }
+  if (p.tier) lines.push(`Heat Tier: ${escapeHtml(p.tier.toUpperCase())}`);
+  if (p.frac_vegetation != null) lines.push(`Vegetation: ${(p.frac_vegetation * 100).toFixed(1)}%`);
+  return lines.join('<br/>');
+}
+
+const SENSOR_COLORS = { green: [0, 200, 83], yellow: [255, 214, 0], orange: [255, 145, 0], red: [255, 23, 68] };
+
+// Hover card for one street sensor (AWS IoT Core feed).
+function sensorTooltip(s) {
+  const lines = [`<b>Street sensor ${escapeHtml(s.sensor_id)}</b>`, `Air temperature: ${s.temp_c.toFixed(1)}°C`];
+  if (s.humidity_pct != null) lines.push(`Humidity: ${s.humidity_pct}%`);
+  if (s.heat_index_c != null) lines.push(`Heat index: ${s.heat_index_c.toFixed(1)}°C`);
+  lines.push(s.stale ? 'No reading in the last 15 minutes' : `Updated ${s.age_s < 90 ? 'just now' : `${Math.round(s.age_s / 60)} min ago`}`);
+  return lines.join('<br/>');
+}
+
 export default function MapView({ city, cityInfo }) {
+  const { t } = useLang();
+  const [sensors, setSensors] = useState(null);
   const [gridData, setGridData] = useState(null);
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +115,19 @@ export default function MapView({ city, cityInfo }) {
     return () => { cancelled = true; };
   }, [city]);
 
+  // Street sensors (optional feature): refreshed every minute, absent when none are connected.
+  useEffect(() => {
+    if (!city) return undefined;
+    let off = false;
+    const pull = () => fetch(`${API_BASE}/api/v1/sensors?city=${city}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!off) setSensors(d && d.count > 0 ? d : null); })
+      .catch(() => { if (!off) setSensors(null); });
+    pull();
+    const iv = setInterval(pull, 60000);
+    return () => { off = true; clearInterval(iv); };
+  }, [city]);
+
   const layers = [
     new GeoJsonLayer({
       id: 'grid-layer',
@@ -103,6 +153,16 @@ export default function MapView({ city, cityInfo }) {
         getFillColor: 500,
         getElevation: 500
       }
+    }),
+    sensors && new ScatterplotLayer({
+      id: 'sensor-layer',
+      data: sensors.sensors,
+      pickable: true,
+      getPosition: (d) => [d.lon, d.lat, 1200],   // drawn above the extruded grid
+      getFillColor: (d) => (d.stale ? [150, 150, 160] : (SENSOR_COLORS[d.alert_level] || [150, 150, 160])),
+      getLineColor: [255, 255, 255],
+      stroked: true, lineWidthUnits: 'pixels', getLineWidth: 2,
+      radiusUnits: 'pixels', getRadius: 9,
     })
   ];
 
@@ -139,12 +199,9 @@ export default function MapView({ city, cityInfo }) {
           boundary={gridData?.boundary}
           initialViewState={initialViewState}
           layers={layers}
-          getTooltip={({object}) => object && (
-            `Cell: ${object.properties.grid_id}
-LST: ${object.properties.lst_mean.toFixed(1)}°C${object.properties.lst_source === 'predicted' ? ' (model estimate — no clear satellite pass)' : ''}
-Tier: ${object.properties.tier.toUpperCase()}
-Vegetation: ${(object.properties.frac_vegetation * 100).toFixed(1)}%`
-          )}
+          getTooltip={({object}) => (object
+            ? { html: object.properties ? cellTooltip(object.properties) : sensorTooltip(object) }
+            : null)}
         />
       </div>
 
@@ -165,6 +222,11 @@ Vegetation: ${(object.properties.frac_vegetation * 100).toFixed(1)}%`
             <span className="badge">{overview.analysis_period}</span>
             {overview.data_kind === 'real' && <span className="badge" title="Landsat composite, Apr–Jun 2024–26">observed</span>}
           </div>
+          {sensors && (
+            <div className="dec-note" style={{ margin: '0 0 8px' }}>
+              {t('sensors_line')}: {sensors.live}/{sensors.count} {t('sensors_live')}
+              {sensors.max_temp_c != null ? ` · ${t('sensors_max')} ${sensors.max_temp_c.toFixed(1)}°C` : ''}
+            </div>)}
 
           <div className="kpi-grid">
             <div className="kpi-card">

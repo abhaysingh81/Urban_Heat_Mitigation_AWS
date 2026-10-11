@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from api import aws
+from api import aws, translate
 from api.routers.risk import require_real
 from models.risk import ward_table
 
@@ -19,6 +19,8 @@ class BriefBody(BaseModel):
     equity_weight: float = Field(0.5, ge=0, le=1)
     use_llm: bool = True
     make_pdf: bool = True
+    languages: list[str] = Field(default_factory=list, max_length=6,
+                                 description="extra languages for the brief text, e.g. ['mr', 'kn']")
 
 
 def _pdf_dir():
@@ -38,6 +40,16 @@ async def create_brief(body: BriefBody, city_id: str = Depends(require_real)):
         raise HTTPException(400, str(e))
 
     brief["cached"] = False
+    # Regional-language copies (Amazon Translate) of the verified English brief. They are machine
+    # translations for reading only: the English and Hindi texts stay the official ones.
+    brief["translations"] = {}
+    for lang in dict.fromkeys(body.languages):
+        text = translate.translate(brief["brief_en"], lang)
+        if text:
+            from agent.numbers_check import numbers_in
+            brief["translations"][lang] = {
+                "text": text, "machine_translated": True,
+                "numbers_match": numbers_in(text) <= numbers_in(brief["brief_en"])}
     if body.make_pdf:
         try:
             from agent.brief_pdf import build_pdf

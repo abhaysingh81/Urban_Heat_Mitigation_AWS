@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -26,9 +28,10 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import GroupKFold
 
 from pipeline.config import (
-    REAL_CITIES, REAL_MODEL_DIR, city_data_card_file, city_processed_dir,
+    PROCESSED_DIR, REAL_CITIES, REAL_MODEL_DIR, city_data_card_file, city_processed_dir,
     city_real_features_file,
 )
+from pipeline.real.s3_sync import sync_s3_down, sync_s3_up, upload_file_to_s3
 
 TARGET = "lst_c"
 BLOCK_CELLS = 10  # 5 km at 500 m cells
@@ -152,8 +155,16 @@ def block_cv(df, feats, n_splits=5):
     return pred, q10, q90
 
 
-# ── main ─────────────────────────────────────────────────────
-def run(allow_weak: bool = False):
+def run(allow_weak: bool = False, bucket: str | None = None, run_id: str | None = None):
+    bucket = bucket or os.environ.get("S3_PIPELINE_BUCKET")
+    run_id = run_id or os.environ.get("RUN_ID", datetime.now(timezone.utc).strftime("real-v1-%Y%m%d"))
+
+    if bucket:
+        print(f"  [s3] syncing processed city features from s3://{bucket}/runs/{run_id}/processed/ -> {PROCESSED_DIR}")
+        # strict: never train silently on whatever data happens to be baked into the image
+        if not sync_s3_down(bucket, f"runs/{run_id}/processed", PROCESSED_DIR, strict=True):
+            raise SystemExit(f"No processed datasets found under s3://{bucket}/runs/{run_id}/processed/")
+
     print("Loading real-data features…")
     df = load_data()
     df = df[df[TARGET].notna()].reset_index(drop=True)
@@ -247,7 +258,7 @@ def run(allow_weak: bool = False):
         }).round(2).to_parquet(city_processed_dir(cid) / "predictions_real.parquet", index=False)
 
     card = {
-        "model_version": datetime.now(timezone.utc).strftime("real-v1-%Y%m%d"),
+        "model_version": run_id,
         "trained_at": datetime.now(timezone.utc).isoformat(),
         "target": "Landsat 8/9 C2 L2 ST_B10 median composite (°C), Apr–Jun 2024–2026",
         "cities": sorted(df["city_id"].unique().tolist()),
@@ -277,6 +288,31 @@ def run(allow_weak: bool = False):
     (REAL_MODEL_DIR / "model_card.json").write_text(json.dumps(card, indent=2, default=str))
     print(f"\nWrote artifacts to {REAL_MODEL_DIR}")
 
+    # Upload models, predictions, and manifest to S3 if pipeline bucket is configured
+    if bucket:
+        print(f"  [s3] uploading model artifacts to s3://{bucket}/runs/{run_id}/models/")
+        sync_s3_up(REAL_MODEL_DIR, bucket, f"runs/{run_id}/models", strict=True)
+        for cid in df["city_id"].unique():
+            pred_file = city_processed_dir(cid) / "predictions_real.parquet"
+            if pred_file.exists():
+                upload_file_to_s3(pred_file, bucket, f"runs/{run_id}/processed/{cid}/predictions_real.parquet", strict=True)
+
+        manifest = {
+            "run_id": run_id,
+            "model_version": run_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "cities": sorted(df["city_id"].unique().tolist()),
+            "quality_gate_passed": gate_ok,
+            "failing_cities": weak,
+            "shipped_variant": best_name,
+            "models_s3_path": f"s3://{bucket}/runs/{run_id}/models/",
+            "processed_s3_path": f"s3://{bucket}/runs/{run_id}/processed/",
+        }
+        manifest_file = REAL_MODEL_DIR / "manifest.json"
+        manifest_file.write_text(json.dumps(manifest, indent=2))
+        upload_file_to_s3(manifest_file, bucket, f"runs/{run_id}/manifest.json", strict=True)
+        print(f"  [s3] wrote manifest to s3://{bucket}/runs/{run_id}/manifest.json")
+
     if not gate_ok and not allow_weak:
         raise SystemExit(
             f"QUALITY GATE FAILED: leave-city-out Pearson r < {MIN_LOCO_R} for {weak or 'n/a (need ≥2 cities)'}. "
@@ -287,4 +323,7 @@ def run(allow_weak: bool = False):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--allow-weak", action="store_true")
-    run(ap.parse_args().allow_weak)
+    ap.add_argument("--bucket", default="", help="S3 pipeline bucket name (or S3_PIPELINE_BUCKET env)")
+    ap.add_argument("--run-id", default="", help="Pipeline run identifier (or RUN_ID env)")
+    args = ap.parse_args()
+    run(allow_weak=args.allow_weak, bucket=args.bucket or None, run_id=args.run_id or None)

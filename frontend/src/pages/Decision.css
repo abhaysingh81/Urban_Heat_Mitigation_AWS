@@ -14,9 +14,9 @@
 .pill.orange { background: color-mix(in srgb, var(--tier-high) 30%, transparent); }
 .pill.red { background: color-mix(in srgb, var(--tier-critical) 30%, transparent); }
 .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 14px 0; }
-.stat { padding: 12px; background: var(--sunken-bg); border-radius: var(--radius-md); }
-.stat .label { font-size: 12px; color: var(--text-secondary); }
-.stat .value { font-family: var(--font-display); font-size: 22px; font-weight: 600; }
+.stat { padding: 12px; background: var(--sunken-bg); border-radius: var(--radius-md); min-width: 0; overflow: hidden; }
+.stat .label { font-size: 12px; color: var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+.stat .value { font-family: var(--font-display); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .field label { font-size: 13px; color: var(--text-secondary); display: flex; justify-content: space-between; }
 .field input[type=range] { width: 100%; }
@@ -38,7 +38,7 @@ table.dec-table tr.click { cursor: pointer; }
 .error-text { color: var(--tier-critical); font-size: 13px; }
 
 /* citizen (mobile-first) */
-.citizen { max-width: 460px; margin: 0 auto; padding: 16px; }
+.citizen { max-width: 460px; margin: 0 auto; padding: 16px; height: 100dvh; overflow-y: auto; box-sizing: border-box; }
 .citizen .hero { padding: 20px; border-radius: var(--radius-lg); text-align: center; }
 .citizen .hero.green { background: color-mix(in srgb, var(--tier-normal) 22%, var(--bg-secondary)); }
 .citizen .hero.yellow { background: color-mix(in srgb, var(--tier-moderate) 26%, var(--bg-secondary)); }
@@ -48,6 +48,19 @@ table.dec-table tr.click { cursor: pointer; }
 .citizen .hero p { font-size: 17px; line-height: 1.45; }
 .citizen .spot { display: flex; justify-content: space-between; align-items: center; padding: 14px; margin-top: 8px; min-height: 56px; }
 .citizen .spot a { color: var(--accent-primary); font-weight: 600; padding: 10px; }
+.citizen .spot-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; margin-left: 8px; }
+.citizen .spot-actions .btn-ghost { min-height: 40px; white-space: nowrap; }
+.citizen .spot-actions a { padding: 6px 10px; white-space: nowrap; }
+.citizen .route-map { height: 240px; margin-top: 6px; border-radius: var(--radius-md); overflow: hidden; position: relative; }
 .citizen .big-btn { width: 100%; min-height: 52px; font-size: 16px; margin-top: 8px; }
-.citizen .lang { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; }
+.citizen .lang { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 8px; }
+.citizen .back-link { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; min-height: 40px; text-decoration: none; }
 select { background: var(--select-option-bg); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 8px 10px; }
+.simulation-banner { background: repeating-linear-gradient(45deg, var(--tier-high), var(--tier-high) 10px, color-mix(in srgb, var(--tier-high) 80%, black) 10px, color-mix(in srgb, var(--tier-high) 80%, black) 20px); color: #fff; padding: 6px; text-align: center; font-weight: bold; font-size: 12px; letter-spacing: 1px; border-radius: var(--radius-md); margin-bottom: 12px; }
+
+.pill.rep-new { background: color-mix(in srgb, var(--tier-high) 30%, transparent); }
+.pill.rep-verified { background: color-mix(in srgb, var(--tier-moderate) 35%, transparent); }
+.pill.rep-dispatched { background: color-mix(in srgb, var(--accent-primary) 30%, transparent); }
+.pill.rep-resolved { background: color-mix(in srgb, var(--tier-normal) 30%, transparent); }
+.pill.rep-rejected { background: var(--overlay-4); }
+.citizen .lang-more { background: var(--overlay-4); color: var(--text-primary); border: 1px solid var(--glass-border); padding: 8px 8px; border-radius: var(--radius-md); max-width: 150px; }

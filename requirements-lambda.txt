@@ -17,3 +17,5 @@ boto3>=1.34.0
 fpdf2>=2.7.9
 uharfbuzz>=0.39.0
 strands-agents>=1.0.0
+# Cognito access-token verification (api/auth.py)
+PyJWT[crypto]>=2.8.0

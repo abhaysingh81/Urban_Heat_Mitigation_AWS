@@ -1,14 +1,9 @@
 """Budget + equity optimizer and saved-plan lifecycle."""
 
-from typing import Optional
-
-import hmac
-import os
-
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from api import store
+from api import auth, store
 from api.routers.risk import require_real
 from models.optimizer import COOLING_TYPES, PlanRequest, compare_equity, optimize
 
@@ -94,14 +89,13 @@ async def export_plan(plan_id: str, format: str = "csv"):
 
 @router.put("/{plan_id}/status")
 async def set_status(plan_id: str, body: StatusBody,
-                     x_officer_token: Optional[str] = Header(None)):
-    # When OFFICER_TOKEN is configured (the AWS deployment), changing a plan's status
-    # requires it; local development without the variable stays open.
-    expected = os.environ.get("OFFICER_TOKEN")
-    if expected and not hmac.compare_digest(x_officer_token or "", expected):
-        raise HTTPException(401, "officer token required to change plan status")
+                     user: dict = Depends(auth.require_role(auth.CITY_PLANNER))):
+    # Approving or implementing an official plan is a city-planner action. With Cognito the
+    # signed-in planner is recorded in the audit trail; with only OFFICER_TOKEN the shared
+    # secret is required; local development without either stays open (see api/auth.py).
+    actor = body.actor if user["sub"] in ("local", "shared-token") else user["name"]
     try:
-        return store.set_plan_status(plan_id, body.status, body.actor, body.note)
+        return store.set_plan_status(plan_id, body.status, actor, body.note)
     except KeyError:
         raise HTTPException(404, "plan not found")
     except ValueError as e:

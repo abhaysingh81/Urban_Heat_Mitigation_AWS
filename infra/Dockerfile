@@ -2,7 +2,10 @@
 FROM public.ecr.aws/lambda/python:3.11
 
 COPY requirements-lambda.txt ${LAMBDA_TASK_ROOT}/
-RUN pip install --no-cache-dir -r requirements-lambda.txt
+# --only-binary: this base image has no compiler and an older glibc, so pip must pick the newest
+# release that ships a compatible wheel instead of trying to compile the latest source (numpy 2.4+).
+# Long timeout + retries: a slow connection to PyPI must not fail the image build.
+RUN pip install --no-cache-dir --only-binary=:all: --default-timeout=120 --retries 10 -r requirements-lambda.txt
 
 COPY api ${LAMBDA_TASK_ROOT}/api
 COPY agent ${LAMBDA_TASK_ROOT}/agent

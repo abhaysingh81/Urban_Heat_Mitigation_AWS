@@ -31,9 +31,67 @@ Parameters:
     Type: Number
     Default: 25
     Description: AWS Budgets alarm threshold
+  EnableLocationMap:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Create an Amazon Location API key for the basemap and walking routes (the frontend falls back to CARTO and straight-line estimates without it)
+  EnableKnowledgeBase:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Create a Bedrock Knowledge Base on S3 Vectors for the Heat Officer's guidance search (it uses the local guidance file without it)
+
+  KbMinScore:
+    Type: String
+    Default: '0.4'
+    AllowedPattern: '^(0(\.\d+)?|1(\.0+)?)$'
+    Description: Knowledge base passages scoring below this (0 to 1) are ignored; tune it against your own test questions
+  EnableTranslate:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: Amazon Translate for the advisory and brief in Marathi, Bengali, Tamil, Telugu, Gujarati and Kannada (permission only; billed per character when used)
+  SesFromEmail:
+    Type: String
+    Default: ''
+    Description: Sender address for Amazon SES HTML heat alerts (empty = citizens get plain-text SNS email). SES emails this address a verification link.
+  EnableCognito:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Amazon Cognito sign-in with ward_officer and city_planner roles (replaces the shared officer token)
+  EnableLiveUpdates:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: API Gateway WebSocket API that pushes new citizen reports to officer screens
+  EnableIotSensors:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: AWS IoT Core rules and tables for street temperature sensors
+  EnableAnalytics:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Glue tables and an Athena workgroup over the data bucket (for Athena and QuickSight)
+  EnableWaf:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: AWS WAF on CloudFront, with the API published through CloudFront so the firewall covers it (about 8 USD a month)
 
 Conditions:
+  UseSes: !Not [!Equals [!Ref SesFromEmail, '']]
+  UseCognito: !Equals [!Ref EnableCognito, 'true']
+  UseLive: !Equals [!Ref EnableLiveUpdates, 'true']
+  UseIot: !Equals [!Ref EnableIotSensors, 'true']
+  UseAnalytics: !Equals [!Ref EnableAnalytics, 'true']
+  UseWaf: !Equals [!Ref EnableWaf, 'true']
   HasEmail: !Not [!Equals [!Ref AlertEmail, '']]
+  UseLocationMap: !Equals [!Ref EnableLocationMap, 'true']
+  UseKnowledgeBase: !Equals [!Ref EnableKnowledgeBase, 'true']
 
 Globals:
   Function:
@@ -50,6 +108,21 @@ Globals:
         CORS_ORIGINS: !Ref ExtraCorsOrigin
         OFFICER_TOKEN: !Ref OfficerToken
         BRIEF_DEADLINE_S: '20'
+        API_TIMEOUT_SECONDS: '29'
+        ALERT_TOPIC_ARN: !Ref AlertTopic
+        KNOWLEDGE_BASE_ID: !If [UseKnowledgeBase, !GetAtt KnowledgeBase.KnowledgeBaseId, '']
+        KB_MIN_SCORE: !Ref KbMinScore
+        OPS_TOPIC_ARN: !Ref OpsTopic
+        LOCATION_MAP_ENABLED: !Ref EnableLocationMap
+        TRANSLATE_ENABLED: !Ref EnableTranslate
+        SES_FROM_EMAIL: !Ref SesFromEmail
+        SES_CONTACT_LIST: !If [UseSes, !Ref AlertContactList, '']
+        COGNITO_USER_POOL_ID: !If [UseCognito, !Ref UserPool, '']
+        COGNITO_CLIENT_ID: !If [UseCognito, !Ref UserPoolClient, '']
+        ANALYTICS_ENABLED: !Ref EnableAnalytics
+        # CloudFront sends this value to the API as a header when WAF is on (see api/net.py). The
+        # stack's own random id: stable for the life of the stack and never shown in any output.
+        EDGE_SECRET: !If [UseWaf, !Select [2, !Split ['/', !Ref 'AWS::StackId']], '']
 
 Resources:
   # ── storage ────────────────────────────────────────────────
@@ -57,13 +130,17 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       PublicAccessBlockConfiguration: {BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true}
+      NotificationConfiguration:
+        EventBridgeConfiguration: {EventBridgeEnabled: true}
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
       LifecycleConfiguration:
         Rules:
           - {Id: expire-report-photos, Status: Enabled, Prefix: report_photos/, ExpirationInDays: 90}
+          - {Id: expire-report-labels, Status: Enabled, Prefix: report_labels/, ExpirationInDays: 90}
           - {Id: expire-briefs, Status: Enabled, Prefix: briefs/, ExpirationInDays: 30}
+          - {Id: expire-athena-results, Status: Enabled, Prefix: athena-results/, ExpirationInDays: 30}
       CorsConfiguration:
         CorsRules:
           - {AllowedMethods: [PUT], AllowedOrigins: ['*'], AllowedHeaders: ['*'], MaxAge: 600}
@@ -83,6 +160,15 @@ Resources:
       AttributeDefinitions: [{AttributeName: id, AttributeType: S}]
       KeySchema: [{AttributeName: id, KeyType: HASH}]
       SSESpecification: {SSEEnabled: true}
+
+  # per-IP signup counter for the public alert-subscribe route; items expire by themselves
+  RateLimitTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: id, AttributeType: S}]
+      KeySchema: [{AttributeName: id, KeyType: HASH}]
+      TimeToLiveSpecification: {AttributeName: expires_at, Enabled: true}
 
   # ── agent guardrail: stay on heat/cooling, no medical advice ─
   HeatGuardrail:
@@ -129,11 +215,24 @@ Resources:
     Condition: HasEmail
     Properties: {TopicArn: !Ref AlertTopic, Protocol: email, Endpoint: !Ref AlertEmail}
 
+  OpsTopic:
+    Type: AWS::SNS::Topic
+    Properties: {DisplayName: HeatRelief Ops Alarms}
+
+  OpsEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasEmail
+    Properties: {TopicArn: !Ref OpsTopic, Protocol: email, Endpoint: !Ref AlertEmail}
+
   # ── API (FastAPI in a Lambda container) ─────────────────────
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
       DefaultRouteSettings: {ThrottlingBurstLimit: 20, ThrottlingRateLimit: 10}
+      RouteSettings:
+        'POST /api/v1/alerts/subscribe':
+          ThrottlingRateLimit: 1
+          ThrottlingBurstLimit: 3
       CorsConfiguration:
         AllowOrigins: ['*']          # public read API; no credentials are used
         AllowMethods: [GET, POST, PUT, OPTIONS]
@@ -146,15 +245,51 @@ Resources:
       PackageType: Image
       MemorySize: 2048
       Timeout: 29
+      Environment:
+        Variables:
+          RATE_LIMIT_TABLE: !Ref RateLimitTable
+          # only the API uses these; they are set here (not in Globals) because the WebSocket and
+          # sensor functions exist only when their feature is on
+          WS_CONNECTIONS_TABLE: !If [UseLive, !Ref WsConnectionsTable, '']
+          WS_API_ENDPOINT: !If [UseLive, !Sub 'https://${WsApi}.execute-api.${AWS::Region}.amazonaws.com/live', '']
+          WS_PUBLIC_URL: !If [UseLive, !Sub 'wss://${WsApi}.execute-api.${AWS::Region}.amazonaws.com/live', '']
+          SENSOR_LATEST_TABLE: !If [UseIot, !Ref SensorLatestTable, '']
       Policies:
         - S3CrudPolicy: {BucketName: !Ref DataBucket}
         - DynamoDBCrudPolicy: {TableName: !Ref PlansTable}
         - DynamoDBCrudPolicy: {TableName: !Ref ReportsTable}
+        - DynamoDBCrudPolicy: {TableName: !Ref RateLimitTable}
         - Statement:
             - Effect: Allow
-              Action: [bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream, bedrock:ApplyGuardrail]
-              Resource: '*'   # model/profile/guardrail ARNs vary by region and ID; narrow after choosing a model
+              Action: [s3:GetObjectTagging]
+              Resource: !Sub "${DataBucket.Arn}/*"
+            - Effect: Allow
+              Action: [bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream, bedrock:ApplyGuardrail, bedrock:Retrieve]
+              Resource: '*'   # model/profile/guardrail/kb ARNs vary by region and ID; narrow after choosing a model
+            - Effect: Allow
+              Action: [sns:Subscribe, sns:GetTopicAttributes]
+              Resource: !Ref AlertTopic
+            - Effect: Allow          # Feature H
+              Action: [translate:TranslateText]
+              Resource: '*'
+            - Effect: Allow          # Feature I: signup and confirmation through the SES contact list
+              Action: [ses:CreateContact, ses:UpdateContact, ses:GetContact, ses:SendEmail]
+              Resource:
+                - !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
+                - !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/*'
+            - Effect: Allow          # Features G and L: sensor readings and the WebSocket connection list
+              Action: [dynamodb:Query, dynamodb:Scan, dynamodb:DeleteItem]
+              Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${AWS::StackName}-*'
+            - Effect: Allow          # Feature L: push events to connected officer screens
+              Action: [execute-api:ManageConnections]
+              Resource: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:*/live/POST/@connections/*'
       Events:
+        Subscribe:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/v1/alerts/subscribe
+            Method: POST
         Any:
           Type: HttpApi
           Properties:
@@ -189,6 +324,12 @@ Resources:
         - SNSPublishMessagePolicy: {TopicName: !GetAtt AlertTopic.TopicName}
         - Statement:
             - {Effect: Allow, Action: [polly:SynthesizeSpeech], Resource: '*'}
+            - {Effect: Allow, Action: [translate:TranslateText], Resource: '*'}
+            - Effect: Allow          # Feature I: send the HTML card to opted-in contacts, drop expired signups
+              Action: [ses:ListContacts, ses:GetContact, ses:DeleteContact, ses:SendEmail]
+              Resource:
+                - !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
+                - !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:contact-list/*'
       Events:
         Daily:
           Type: ScheduleV2
@@ -228,14 +369,110 @@ Resources:
             DomainName: !GetAtt FrontendBucket.RegionalDomainName
             OriginAccessControlId: !GetAtt FrontendOAC.Id
             S3OriginConfig: {OriginAccessIdentity: ''}
+          # Feature M: with WAF on, the API is also served from this distribution (/api/* and /health),
+          # so the firewall sees every API request. The header proves to the API that a request
+          # came through here (api/net.py); direct calls to API Gateway are then refused.
+          - !If
+            - UseWaf
+            - Id: api
+              DomainName: !Sub '${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+              CustomOriginConfig: {OriginProtocolPolicy: https-only, OriginSSLProtocols: [TLSv1.2]}
+              OriginCustomHeaders:
+                - {HeaderName: X-Origin-Verify, HeaderValue: !Select [2, !Split ['/', !Ref 'AWS::StackId']]}
+            - !Ref AWS::NoValue
         DefaultCacheBehavior:
           TargetOriginId: frontend
           ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6   # Managed-CachingOptimized
           Compress: true
-        CustomErrorResponses:    # single-page-app routing
-          - {ErrorCode: 403, ResponseCode: 200, ResponsePagePath: /index.html}
-          - {ErrorCode: 404, ResponseCode: 200, ResponsePagePath: /index.html}
+          FunctionAssociations: !If
+            - UseWaf
+            - [{EventType: viewer-request, FunctionARN: !GetAtt SpaRewriteFunction.FunctionARN}]
+            - !Ref AWS::NoValue
+        CacheBehaviors: !If
+          - UseWaf
+          - - PathPattern: /api/*
+              TargetOriginId: api
+              ViewerProtocolPolicy: https-only
+              AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+              CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad          # Managed-CachingDisabled
+              OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac  # Managed-AllViewerExceptHostHeader
+            - PathPattern: /health
+              TargetOriginId: api
+              ViewerProtocolPolicy: https-only
+              AllowedMethods: [GET, HEAD]
+              CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+              OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac
+          - !Ref AWS::NoValue
+        WebACLId: !If [UseWaf, !GetAtt WebAcl.Arn, !Ref AWS::NoValue]
+        # Single-page-app routing. Without WAF: missing S3 keys (403/404) return index.html.
+        # With WAF the API shares this distribution and its 403/404 answers must stay intact,
+        # so the rewrite is done by SpaRewriteFunction on the frontend behaviour only.
+        CustomErrorResponses: !If
+          - UseWaf
+          - !Ref AWS::NoValue
+          - - {ErrorCode: 403, ResponseCode: 200, ResponsePagePath: /index.html}
+            - {ErrorCode: 404, ResponseCode: 200, ResponsePagePath: /index.html}
+
+  SpaRewriteFunction:
+    Type: AWS::CloudFront::Function
+    Condition: UseWaf
+    Properties:
+      Name: !Sub '${AWS::StackName}-spa-rewrite'
+      AutoPublish: true
+      FunctionConfig: {Comment: Serve index.html for app routes such as /citizen, Runtime: cloudfront-js-2.0}
+      FunctionCode: |
+        function handler(event) {
+          var request = event.request;
+          var last = request.uri.split('/').pop();
+          if (last.indexOf('.') === -1) { request.uri = '/index.html'; }
+          return request;
+        }
+
+  # ── Feature M: AWS WAF (CloudFront scope lives in us-east-1, like this stack) ──
+  WebAcl:
+    Type: AWS::WAFv2::WebACL
+    Condition: UseWaf
+    Properties:
+      Scope: CLOUDFRONT
+      Description: HeatRelief rate limits and bad-IP filter
+      DefaultAction: {Allow: {}}
+      VisibilityConfig: {SampledRequestsEnabled: true, CloudWatchMetricsEnabled: true, MetricName: !Sub '${AWS::StackName}-waf'}
+      Rules:
+        - Name: public-write-rate-limit     # signup, photo upload and report routes: 50 requests per 5 minutes per IP
+          Priority: 0
+          Action: {Block: {}}
+          VisibilityConfig: {SampledRequestsEnabled: true, CloudWatchMetricsEnabled: true, MetricName: !Sub '${AWS::StackName}-write-rate'}
+          Statement:
+            RateBasedStatement:
+              Limit: 50
+              EvaluationWindowSec: 300
+              AggregateKeyType: IP
+              ScopeDownStatement:
+                OrStatement:
+                  Statements:
+                    - ByteMatchStatement:
+                        SearchString: /api/v1/alerts/
+                        FieldToMatch: {UriPath: {}}
+                        TextTransformations: [{Priority: 0, Type: LOWERCASE}]
+                        PositionalConstraint: STARTS_WITH
+                    - ByteMatchStatement:
+                        SearchString: /api/v1/reports
+                        FieldToMatch: {UriPath: {}}
+                        TextTransformations: [{Priority: 0, Type: LOWERCASE}]
+                        PositionalConstraint: STARTS_WITH
+        - Name: overall-rate-limit          # everything else: stops scraping without touching normal use
+          Priority: 1
+          Action: {Block: {}}
+          VisibilityConfig: {SampledRequestsEnabled: true, CloudWatchMetricsEnabled: true, MetricName: !Sub '${AWS::StackName}-overall-rate'}
+          Statement:
+            RateBasedStatement: {Limit: 2000, EvaluationWindowSec: 300, AggregateKeyType: IP}
+        - Name: aws-ip-reputation
+          Priority: 2
+          OverrideAction: {None: {}}
+          VisibilityConfig: {SampledRequestsEnabled: true, CloudWatchMetricsEnabled: true, MetricName: !Sub '${AWS::StackName}-ip-reputation'}
+          Statement:
+            ManagedRuleGroupStatement: {VendorName: AWS, Name: AWSManagedRulesAmazonIpReputationList}
 
   FrontendBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -265,7 +502,7 @@ Resources:
       Threshold: 5
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
-      AlarmActions: [!Ref AlertTopic]
+      AlarmActions: [!Ref OpsTopic]
 
   RefreshFailedAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -280,7 +517,7 @@ Resources:
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
-      AlarmActions: [!Ref AlertTopic]
+      AlarmActions: [!Ref OpsTopic]
 
   Dashboard:
     Type: AWS::CloudWatch::Dashboard
@@ -306,9 +543,577 @@ Resources:
         BudgetType: COST
         TimeUnit: MONTHLY
         BudgetLimit: {Amount: !Ref MonthlyBudgetUSD, Unit: USD}
+        CostTypes:
+          IncludeCredit: false
       NotificationsWithSubscribers:
         - Notification: {NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 80}
           Subscribers: [{SubscriptionType: EMAIL, Address: !Ref AlertEmail}]
+
+  # ── Heat Officer knowledge base (opt-in): Bedrock Knowledge Base on S3 Vectors ──
+  # Documents live under s3://<data bucket>/kb-docs/ (scripts/deploy.sh uploads agent/guidance/ and
+  # starts the ingestion job). The index settings cannot be changed after creation: 1024 dimensions
+  # matches Titan Text Embeddings V2, and Bedrock requires the two non-filterable metadata keys.
+  KbVectorBucket:
+    Type: AWS::S3Vectors::VectorBucket
+    Condition: UseKnowledgeBase
+    Properties:
+      VectorBucketName: !Sub '${AWS::StackName}-kb-${AWS::AccountId}'
+
+  KbVectorIndex:
+    Type: AWS::S3Vectors::Index
+    Condition: UseKnowledgeBase
+    Properties:
+      VectorBucketArn: !GetAtt KbVectorBucket.VectorBucketArn
+      IndexName: guidance
+      DataType: float32
+      Dimension: 1024
+      DistanceMetric: cosine
+      MetadataConfiguration:
+        NonFilterableMetadataKeys: [AMAZON_BEDROCK_TEXT, AMAZON_BEDROCK_METADATA]
+
+  KnowledgeBaseRole:
+    Type: AWS::IAM::Role
+    Condition: UseKnowledgeBase
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: bedrock.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {'aws:SourceAccount': !Ref 'AWS::AccountId'}
+      Policies:
+        - PolicyName: knowledge-base
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: bedrock:InvokeModel
+                Resource: !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0'
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt DataBucket.Arn
+                Condition:
+                  StringLike: {'s3:prefix': ['kb-docs/*']}
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub '${DataBucket.Arn}/kb-docs/*'
+              - Effect: Allow
+                Action: [s3vectors:PutVectors, s3vectors:GetVectors, s3vectors:DeleteVectors, s3vectors:QueryVectors, s3vectors:GetIndex]
+                Resource: !GetAtt KbVectorIndex.IndexArn
+
+  KnowledgeBase:
+    Type: AWS::Bedrock::KnowledgeBase
+    Condition: UseKnowledgeBase
+    Properties:
+      Name: !Sub '${AWS::StackName}-guidance'
+      Description: Heat-health guidance documents for the Heat Officer agent
+      RoleArn: !GetAtt KnowledgeBaseRole.Arn
+      KnowledgeBaseConfiguration:
+        Type: VECTOR
+        VectorKnowledgeBaseConfiguration:
+          EmbeddingModelArn: !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0'
+          EmbeddingModelConfiguration:
+            BedrockEmbeddingModelConfiguration: {Dimensions: 1024, EmbeddingDataType: FLOAT32}
+      StorageConfiguration:
+        Type: S3_VECTORS
+        S3VectorsConfiguration:
+          IndexArn: !GetAtt KbVectorIndex.IndexArn
+
+  KbDataSource:
+    Type: AWS::Bedrock::DataSource
+    Condition: UseKnowledgeBase
+    Properties:
+      KnowledgeBaseId: !GetAtt KnowledgeBase.KnowledgeBaseId
+      Name: guidance-docs
+      DataDeletionPolicy: RETAIN   # deleting the index removes the vectors; this keeps stack deletion simple
+      DataSourceConfiguration:
+        Type: S3
+        S3Configuration:
+          BucketArn: !GetAtt DataBucket.Arn
+          InclusionPrefixes: ['kb-docs/']
+      VectorIngestionConfiguration:
+        ChunkingConfiguration:   # fixed size: AWS advises against hierarchical chunking on S3 Vectors
+          ChunkingStrategy: FIXED_SIZE
+          FixedSizeChunkingConfiguration: {MaxTokens: 300, OverlapPercentage: 15}
+
+  # ── basemap (opt-in): the key ships to the browser, so the referer and action limits are its protection
+  MapApiKey:
+    Type: AWS::Location::APIKey
+    Condition: UseLocationMap
+    Properties:
+      KeyName: !Sub '${AWS::StackName}-map'
+      Description: HeatRelief basemap tiles and walking routes (restricted to the frontend origin)
+      NoExpiry: true
+      ForceUpdate: true
+      ForceDelete: true
+      Restrictions:
+        AllowActions: ['geo-maps:*', 'geo-routes:CalculateRoutes']
+        AllowResources:
+          - !Sub 'arn:${AWS::Partition}:geo-maps:${AWS::Region}::provider/default'
+          - !Sub 'arn:${AWS::Partition}:geo-routes:${AWS::Region}::provider/default'
+        AllowReferers:
+          - !Sub 'https://${FrontendDistribution.DomainName}/*'
+          - 'http://localhost:5173/*'
+
+  # ── Feature I: Amazon SES (HTML alert cards; double opt-in through a contact list) ──
+  SesIdentity:
+    Type: AWS::SES::EmailIdentity
+    Condition: UseSes
+    Properties:
+      EmailIdentity: !Ref SesFromEmail
+
+  # One topic per city and minimum level: a contact opted in to "mumbai-orange" gets Mumbai alerts
+  # at orange and red. An AWS account can hold only one contact list.
+  AlertContactList:
+    Type: AWS::SES::ContactList
+    Condition: UseSes
+    Properties:
+      ContactListName: !Sub '${AWS::StackName}-alerts'
+      Description: HeatRelief citizen heat alerts
+      Topics:
+        - {TopicName: new_delhi-yellow, DisplayName: New Delhi heat alerts (yellow and above), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: new_delhi-orange, DisplayName: New Delhi heat alerts (orange and above), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: new_delhi-red, DisplayName: New Delhi heat alerts (red only), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: mumbai-yellow, DisplayName: Mumbai heat alerts (yellow and above), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: mumbai-orange, DisplayName: Mumbai heat alerts (orange and above), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: mumbai-red, DisplayName: Mumbai heat alerts (red only), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: jaipur-yellow, DisplayName: Jaipur heat alerts (yellow and above), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: jaipur-orange, DisplayName: Jaipur heat alerts (orange and above), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: jaipur-red, DisplayName: Jaipur heat alerts (red only), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: bengaluru-yellow, DisplayName: Bengaluru heat alerts (yellow and above), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: bengaluru-orange, DisplayName: Bengaluru heat alerts (orange and above), DefaultSubscriptionStatus: OPT_OUT}
+        - {TopicName: bengaluru-red, DisplayName: Bengaluru heat alerts (red only), DefaultSubscriptionStatus: OPT_OUT}
+
+  # ── Feature K: Amazon Cognito (officers and planners only; citizens never sign in) ──
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Condition: UseCognito
+    Properties:
+      UserPoolName: !Sub '${AWS::StackName}-staff'
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      AdminCreateUserConfig: {AllowAdminCreateUserOnly: true}   # accounts are issued by an administrator
+      Policies:
+        PasswordPolicy: {MinimumLength: 10, RequireLowercase: true, RequireUppercase: true, RequireNumbers: true, RequireSymbols: false, TemporaryPasswordValidityDays: 7}
+      AccountRecoverySetting:
+        RecoveryMechanisms: [{Name: verified_email, Priority: 1}]
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Condition: UseCognito
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: web
+      GenerateSecret: false       # a browser app cannot keep a secret
+      ExplicitAuthFlows: [ALLOW_USER_PASSWORD_AUTH, ALLOW_REFRESH_TOKEN_AUTH]
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 1
+      TokenValidityUnits: {AccessToken: minutes, IdToken: minutes, RefreshToken: days}
+
+  WardOfficerGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Condition: UseCognito
+    Properties: {UserPoolId: !Ref UserPool, GroupName: ward_officer, Description: Inspect and verify citizen reports and dispatch help}
+
+  CityPlannerGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Condition: UseCognito
+    Properties: {UserPoolId: !Ref UserPool, GroupName: city_planner, Description: Approve and implement intervention plans}
+
+  # ── Feature L: live officer updates (API Gateway WebSocket API) ──
+  WsConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Condition: UseLive
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: id, AttributeType: S}]
+      KeySchema: [{AttributeName: id, KeyType: HASH}]
+      TimeToLiveSpecification: {AttributeName: expires_at, Enabled: true}
+
+  WsApi:
+    Type: AWS::ApiGatewayV2::Api
+    Condition: UseLive
+    Properties:
+      Name: !Sub '${AWS::StackName}-live'
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+
+  WsFunction:
+    Type: AWS::Serverless::Function
+    Condition: UseLive
+    Properties:
+      PackageType: Image
+      ImageConfig: {Command: ['lambdas.ws_connections.app.handler']}
+      MemorySize: 512
+      Timeout: 10
+      Environment:
+        Variables:
+          WS_CONNECTIONS_TABLE: !Ref WsConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy: {TableName: !Ref WsConnectionsTable}
+    Metadata:
+      Dockerfile: infra/Dockerfile
+      DockerContext: ..
+      DockerTag: heatrelief
+
+  WsIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Condition: UseLive
+    Properties:
+      ApiId: !Ref WsApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WsFunction.Arn}/invocations'
+
+  WsConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Condition: UseLive
+    Properties: {ApiId: !Ref WsApi, RouteKey: $connect, AuthorizationType: NONE, Target: !Sub 'integrations/${WsIntegration}'}
+
+  WsDisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Condition: UseLive
+    Properties: {ApiId: !Ref WsApi, RouteKey: $disconnect, Target: !Sub 'integrations/${WsIntegration}'}
+
+  WsDefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Condition: UseLive
+    Properties: {ApiId: !Ref WsApi, RouteKey: $default, Target: !Sub 'integrations/${WsIntegration}'}
+
+  WsDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    Condition: UseLive
+    DependsOn: [WsConnectRoute, WsDisconnectRoute, WsDefaultRoute]
+    Properties: {ApiId: !Ref WsApi}
+
+  WsStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Condition: UseLive
+    Properties:
+      ApiId: !Ref WsApi
+      StageName: live
+      DeploymentId: !Ref WsDeployment
+      DefaultRouteSettings: {ThrottlingBurstLimit: 20, ThrottlingRateLimit: 10}
+
+  WsPermission:
+    Type: AWS::Lambda::Permission
+    Condition: UseLive
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref WsFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${WsApi}/*'
+
+  # ── Feature G: street sensors (AWS IoT Core) ──
+  # Devices publish JSON {"temp_c", "humidity", "lat", "lon"} to heatrelief/sensors/<city>/<sensor id>.
+  # One rule stores every reading (history, kept 7 days) and the newest reading per sensor;
+  # a second rule (on SensorAlertFunction) calls Lambda for hot readings.
+  SensorReadingsTable:
+    Type: AWS::DynamoDB::Table
+    Condition: UseIot
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: sensor_id, AttributeType: S}, {AttributeName: ts, AttributeType: N}]
+      KeySchema: [{AttributeName: sensor_id, KeyType: HASH}, {AttributeName: ts, KeyType: RANGE}]
+      TimeToLiveSpecification: {AttributeName: expires_at, Enabled: true}
+
+  SensorLatestTable:
+    Type: AWS::DynamoDB::Table
+    Condition: UseIot
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: city, AttributeType: S}, {AttributeName: sensor_id, AttributeType: S}]
+      KeySchema: [{AttributeName: city, KeyType: HASH}, {AttributeName: sensor_id, KeyType: RANGE}]
+
+  SensorRuleRole:
+    Type: AWS::IAM::Role
+    Condition: UseIot
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - {Effect: Allow, Principal: {Service: iot.amazonaws.com}, Action: sts:AssumeRole}
+      Policies:
+        - PolicyName: write-sensor-tables
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: dynamodb:PutItem
+                Resource: [!GetAtt SensorReadingsTable.Arn, !GetAtt SensorLatestTable.Arn]
+
+  SensorIngestRule:
+    Type: AWS::IoT::TopicRule
+    Condition: UseIot
+    Properties:
+      TopicRulePayload:
+        AwsIotSqlVersion: '2016-03-23'
+        RuleDisabled: false
+        Description: Store every street-sensor reading and the latest reading per sensor
+        Sql: "SELECT *, topic(3) AS city, topic(4) AS sensor_id, timestamp() AS ts, timestamp() AS received_at, floor(timestamp() / 1000) + 604800 AS expires_at FROM 'heatrelief/sensors/+/+'"
+        Actions:
+          - DynamoDBv2: {RoleArn: !GetAtt SensorRuleRole.Arn, PutItem: {TableName: !Ref SensorReadingsTable}}
+          - DynamoDBv2: {RoleArn: !GetAtt SensorRuleRole.Arn, PutItem: {TableName: !Ref SensorLatestTable}}
+
+  SensorAlertFunction:
+    Type: AWS::Serverless::Function
+    Condition: UseIot
+    Properties:
+      PackageType: Image
+      ImageConfig: {Command: ['lambdas.sensor_alert.app.handler']}
+      MemorySize: 512
+      Timeout: 15
+      Environment:
+        Variables:
+          RATE_LIMIT_TABLE: !Ref RateLimitTable
+      Policies:
+        - SNSPublishMessagePolicy: {TopicName: !GetAtt OpsTopic.TopicName}
+        - DynamoDBCrudPolicy: {TableName: !Ref RateLimitTable}
+      Events:
+        HotReading:
+          Type: IoTRule
+          Properties:
+            AwsIotSqlVersion: '2016-03-23'
+            Sql: "SELECT *, topic(3) AS city, topic(4) AS sensor_id FROM 'heatrelief/sensors/+/+' WHERE temp_c >= 40"
+    Metadata:
+      Dockerfile: infra/Dockerfile
+      DockerContext: ..
+      DockerTag: heatrelief
+
+  # Attach this policy to the certificate of each real sensor. A device may connect only under its
+  # own thing name and publish only to its own topic.
+  SensorDevicePolicy:
+    Type: AWS::IoT::Policy
+    Condition: UseIot
+    Properties:
+      PolicyName: !Sub '${AWS::StackName}-sensor'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: iot:Connect
+            Resource: !Sub 'arn:${AWS::Partition}:iot:${AWS::Region}:${AWS::AccountId}:client/${!iot:Connection.Thing.ThingName}'
+          - Effect: Allow
+            Action: iot:Publish
+            Resource: !Sub 'arn:${AWS::Partition}:iot:${AWS::Region}:${AWS::AccountId}:topic/heatrelief/sensors/*/${!iot:Connection.Thing.ThingName}'
+
+  # ── Feature J: Athena tables over the data bucket (QuickSight connects to the workgroup) ──
+  # scripts/deploy.sh copies each city's features to analytics/features/city=<id>/, and the daily
+  # job adds analytics/risk_daily/city=<id>/dt=<date>/. Partition projection means no crawler and
+  # no "repair table": new days are queryable as soon as the file exists.
+  AnalyticsDatabase:
+    Type: AWS::Glue::Database
+    Condition: UseAnalytics
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput: {Name: heatrelief_analytics, Description: HeatRelief grid features and daily zone risk}
+
+  FeaturesTable:
+    Type: AWS::Glue::Table
+    Condition: UseAnalytics
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref AnalyticsDatabase
+      TableInput:
+        Name: grid_features
+        Description: One row per 500 m grid cell (Landsat surface temperature, land cover, population)
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          classification: parquet
+          projection.enabled: 'true'
+          projection.city.type: enum
+          projection.city.values: new_delhi,mumbai,jaipur,bengaluru
+          storage.location.template: !Sub 's3://${DataBucket}/analytics/features/city=${!city}/'
+        PartitionKeys: [{Name: city, Type: string}]
+        StorageDescriptor:
+          Location: !Sub 's3://${DataBucket}/analytics/features/'
+          InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat
+          SerdeInfo: {SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe}
+          Columns:
+            - {Name: grid_id, Type: string}
+            - {Name: row, Type: bigint}
+            - {Name: col, Type: bigint}
+            - {Name: centroid_lon, Type: double}
+            - {Name: centroid_lat, Type: double}
+            - {Name: lst_c, Type: float}
+            - {Name: lst_std, Type: float}
+            - {Name: n_scenes, Type: double}
+            - {Name: ndvi_mean, Type: float}
+            - {Name: ndvi_std, Type: float}
+            - {Name: ndbi_mean, Type: float}
+            - {Name: mndwi_mean, Type: float}
+            - {Name: frac_impervious, Type: float}
+            - {Name: frac_tree, Type: float}
+            - {Name: frac_vegetation, Type: float}
+            - {Name: frac_bare_soil, Type: float}
+            - {Name: frac_water, Type: float}
+            - {Name: elev_mean, Type: float}
+            - {Name: slope_mean, Type: float}
+            - {Name: building_density, Type: double}
+            - {Name: building_height_mean, Type: double}
+            - {Name: hospital_count, Type: double}
+            - {Name: bus_stop_count, Type: double}
+            - {Name: drinking_water_count, Type: double}
+            - {Name: pop_total, Type: float}
+            - {Name: pop_density, Type: float}
+            - {Name: ndvi_mean_ctx3, Type: double}
+            - {Name: ndvi_mean_ctx7, Type: double}
+            - {Name: frac_impervious_ctx3, Type: double}
+            - {Name: frac_impervious_ctx7, Type: double}
+            - {Name: pop_density_ctx3, Type: double}
+            - {Name: pop_density_ctx7, Type: double}
+            - {Name: air_temp_max, Type: double}
+            - {Name: humidity_mean, Type: double}
+            - {Name: wind_speed_mean, Type: double}
+            - {Name: solar_radiation, Type: double}
+            - {Name: heat_index_c, Type: double}
+            - {Name: wet_bulb_c, Type: double}
+            - {Name: green_deficit, Type: float}
+            - {Name: veg_imperv_ratio, Type: float}
+            - {Name: ward_id, Type: string}
+            - {Name: ward_name, Type: string}
+            - {Name: tier, Type: string}
+            - {Name: lst_mean, Type: float}
+            - {Name: lst_max, Type: float}
+            - {Name: delta_above_mean, Type: float}
+            - {Name: priority_score, Type: float}
+
+  RiskDailyTable:
+    Type: AWS::Glue::Table
+    Condition: UseAnalytics
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref AnalyticsDatabase
+      TableInput:
+        Name: risk_daily
+        Description: One row per analysis zone per day, written by the daily forecast job
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          classification: json
+          projection.enabled: 'true'
+          projection.city.type: enum
+          projection.city.values: new_delhi,mumbai,jaipur,bengaluru
+          projection.dt.type: date
+          projection.dt.format: yyyy-MM-dd
+          projection.dt.range: 2026-01-01,NOW
+          projection.dt.interval: '1'
+          projection.dt.interval.unit: DAYS
+          storage.location.template: !Sub 's3://${DataBucket}/analytics/risk_daily/city=${!city}/dt=${!dt}/'
+        PartitionKeys: [{Name: city, Type: string}, {Name: dt, Type: string}]
+        StorageDescriptor:
+          Location: !Sub 's3://${DataBucket}/analytics/risk_daily/'
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo: {SerializationLibrary: org.openx.data.jsonserde.JsonSerDe}
+          Columns:
+            - {Name: ward_id, Type: string}
+            - {Name: ward_name, Type: string}
+            - {Name: rank, Type: int}
+            - {Name: risk_score, Type: double}
+            - {Name: risk_today, Type: double}
+            - {Name: population, Type: bigint}
+            - {Name: lst_mean, Type: double}
+            - {Name: alert_level, Type: string}
+            - {Name: forecast_tmax_c, Type: double}
+            - {Name: forecast_heat_index_c, Type: double}
+
+  AnalyticsWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Condition: UseAnalytics
+    Properties:
+      Name: !Sub '${AWS::StackName}-analytics'
+      Description: HeatRelief queries (results expire after 30 days; each query is capped at 1 GB scanned)
+      RecursiveDeleteOption: true
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        BytesScannedCutoffPerQuery: 1073741824
+        ResultConfiguration: {OutputLocation: !Sub 's3://${DataBucket}/athena-results/'}
+
+  HottestZonesQuery:
+    Type: AWS::Athena::NamedQuery
+    Condition: UseAnalytics
+    Properties:
+      Name: Hottest zones by city
+      Description: Mean surface temperature, tree cover and people per analysis zone
+      Database: !Ref AnalyticsDatabase
+      WorkGroup: !Ref AnalyticsWorkGroup
+      QueryString: |
+        SELECT city, ward_name, round(avg(lst_c), 1) AS mean_surface_temp_c,
+               round(avg(frac_tree) * 100, 1) AS tree_cover_pct, round(sum(pop_total)) AS people
+        FROM grid_features
+        WHERE lst_c IS NOT NULL
+        GROUP BY city, ward_name
+        ORDER BY mean_surface_temp_c DESC
+        LIMIT 50
+
+  CoolingGapQuery:
+    Type: AWS::Athena::NamedQuery
+    Condition: UseAnalytics
+    Properties:
+      Name: Cooling coverage gaps
+      Description: Hot, populated zones with no drinking water point and no hospital
+      Database: !Ref AnalyticsDatabase
+      WorkGroup: !Ref AnalyticsWorkGroup
+      QueryString: |
+        SELECT city, ward_name, round(avg(lst_c), 1) AS mean_surface_temp_c, round(sum(pop_total)) AS people,
+               sum(drinking_water_count) AS water_points, sum(hospital_count) AS hospitals
+        FROM grid_features
+        GROUP BY city, ward_name
+        HAVING sum(drinking_water_count) = 0 AND sum(hospital_count) = 0 AND sum(pop_total) > 5000
+        ORDER BY mean_surface_temp_c DESC
+        LIMIT 50
+
+  RiskTrendQuery:
+    Type: AWS::Athena::NamedQuery
+    Condition: UseAnalytics
+    Properties:
+      Name: Daily alert level and top risk by city
+      Description: One row per city per day from the daily forecast job
+      Database: !Ref AnalyticsDatabase
+      WorkGroup: !Ref AnalyticsWorkGroup
+      QueryString: |
+        SELECT dt, city, max(alert_level) AS alert_level, max(forecast_tmax_c) AS forecast_tmax_c,
+               round(max(risk_today), 1) AS highest_zone_risk
+        FROM risk_daily
+        WHERE dt >= date_format(current_date - interval '30' day, '%Y-%m-%d')
+        GROUP BY dt, city
+        ORDER BY dt DESC, city
+
+  # ── citizen report photo moderation ─────────────────────────
+  ModeratePhotoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageConfig: {Command: ['lambdas.moderate_photo.app.handler']}
+      MemorySize: 256
+      Timeout: 30
+      Policies:
+        - S3CrudPolicy: {BucketName: !Ref DataBucket}
+        - Statement:
+            - Effect: Allow
+              Action: [rekognition:DetectModerationLabels, rekognition:DetectLabels]
+              Resource: '*'
+            - Effect: Allow
+              Action: [s3:PutObjectTagging, s3:GetObjectTagging]
+              Resource: !Sub "arn:aws:s3:::${DataBucket}/*"
+      Events:
+        PhotoUpload:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              source: [aws.s3]
+              detail-type: ["Object Created"]
+              detail:
+                bucket: {name: [!Ref DataBucket]}
+                object: {key: [{prefix: report_photos/}]}
+    Metadata:
+      Dockerfile: infra/Dockerfile
+      DockerContext: ..
+      DockerTag: heatrelief
 
 Outputs:
   ApiUrl:
@@ -323,3 +1128,39 @@ Outputs:
     Value: !Ref DataBucket
   AlertTopicArn:
     Value: !Ref AlertTopic
+  OpsTopicArn:
+    Value: !Ref OpsTopic
+  MapApiKeyName:
+    Condition: UseLocationMap
+    Value: !Ref MapApiKey
+  KnowledgeBaseId:
+    Condition: UseKnowledgeBase
+    Value: !GetAtt KnowledgeBase.KnowledgeBaseId
+  KbDataSourceId:
+    Condition: UseKnowledgeBase
+    Value: !GetAtt KbDataSource.DataSourceId
+  UserPoolId:
+    Condition: UseCognito
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Condition: UseCognito
+    Value: !Ref UserPoolClient
+  LiveUpdatesUrl:
+    Condition: UseLive
+    Value: !Sub 'wss://${WsApi}.execute-api.${AWS::Region}.amazonaws.com/live'
+  SensorDevicePolicyName:
+    Condition: UseIot
+    Value: !Ref SensorDevicePolicy
+  AthenaWorkGroup:
+    Condition: UseAnalytics
+    Value: !Ref AnalyticsWorkGroup
+  AthenaDatabase:
+    Condition: UseAnalytics
+    Value: !Ref AnalyticsDatabase
+  SesContactList:
+    Condition: UseSes
+    Value: !Ref AlertContactList
+  ApiThroughCloudFront:
+    Condition: UseWaf
+    Value: !Sub 'https://${FrontendDistribution.DomainName}/api/v1'
+
