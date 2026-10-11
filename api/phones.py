@@ -81,7 +81,10 @@ def table_name() -> str:
 
 def _dir():
     d = aws.RUNTIME_DIR / "phone_alerts"
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     return d
 
 

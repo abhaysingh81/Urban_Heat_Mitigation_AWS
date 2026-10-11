@@ -25,7 +25,10 @@ def _now() -> str:
 
 def _dir(kind: str):
     d = aws.RUNTIME_DIR / kind
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     return d
 
 

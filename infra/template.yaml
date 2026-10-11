@@ -31,6 +31,11 @@ Parameters:
     Type: Number
     Default: 25
     Description: AWS Budgets alarm threshold
+  EnableCloudFront:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Create CloudFront distribution for the frontend (false = S3 static website hosting, useful before CloudFront account verification)
   EnableLocationMap:
     Type: String
     Default: 'false'
@@ -139,12 +144,14 @@ Parameters:
     Description: Nightly ward briefs with Amazon Bedrock batch inference (needs BedrockModelId)
 
 Conditions:
+  UseCloudFront: !Equals [!Ref EnableCloudFront, 'true']
+  UseS3Website: !Equals [!Ref EnableCloudFront, 'false']
   UseSes: !Not [!Equals [!Ref SesFromEmail, '']]
   UseCognito: !Equals [!Ref EnableCognito, 'true']
   UseLive: !Equals [!Ref EnableLiveUpdates, 'true']
   UseIot: !Equals [!Ref EnableIotSensors, 'true']
   UseAnalytics: !Equals [!Ref EnableAnalytics, 'true']
-  UseWaf: !Equals [!Ref EnableWaf, 'true']
+  UseWaf: !And [!Equals [!Ref EnableWaf, 'true'], !Condition UseCloudFront]
   HasEmail: !Not [!Equals [!Ref AlertEmail, '']]
   UseLocationMap: !Equals [!Ref EnableLocationMap, 'true']
   UseKnowledgeBase: !Equals [!Ref EnableKnowledgeBase, 'true']
@@ -473,14 +480,23 @@ Resources:
       DockerContext: ..
       DockerTag: heatrelief
 
-  # ── frontend (S3 + CloudFront, private bucket via OAC) ──────
+  # ── frontend (S3 + optional CloudFront) ─────────────────────
   FrontendBucket:
     Type: AWS::S3::Bucket
     Properties:
-      PublicAccessBlockConfiguration: {BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true}
+      WebsiteConfiguration: !If
+        - UseCloudFront
+        - !Ref AWS::NoValue
+        - IndexDocument: index.html
+          ErrorDocument: index.html
+      PublicAccessBlockConfiguration: !If
+        - UseCloudFront
+        - {BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true}
+        - {BlockPublicAcls: true, BlockPublicPolicy: false, IgnorePublicAcls: true, RestrictPublicBuckets: false}
 
   FrontendOAC:
     Type: AWS::CloudFront::OriginAccessControl
+    Condition: UseCloudFront
     Properties:
       OriginAccessControlConfig:
         Name: !Sub '${AWS::StackName}-oac'
@@ -490,6 +506,7 @@ Resources:
 
   FrontendDistribution:
     Type: AWS::CloudFront::Distribution
+    Condition: UseCloudFront
     Properties:
       DistributionConfig:
         Enabled: true
@@ -607,6 +624,7 @@ Resources:
 
   FrontendBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: UseCloudFront
     Properties:
       Bucket: !Ref FrontendBucket
       PolicyDocument:
@@ -618,6 +636,18 @@ Resources:
             Condition:
               StringEquals:
                 AWS:SourceArn: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}'
+
+  FrontendWebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: UseS3Website
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${FrontendBucket.Arn}/*'
 
   # ── observability ──────────────────────────────────────────
   ApiErrorsAlarm:
@@ -784,9 +814,12 @@ Resources:
         AllowResources:
           - !Sub 'arn:${AWS::Partition}:geo-maps:${AWS::Region}::provider/default'
           - !Sub 'arn:${AWS::Partition}:geo-routes:${AWS::Region}::provider/default'
-        AllowReferers:
-          - !Sub 'https://${FrontendDistribution.DomainName}/*'
-          - 'http://localhost:5173/*'
+        AllowReferers: !If
+          - UseCloudFront
+          - - !Sub 'https://${FrontendDistribution.DomainName}/*'
+            - 'http://localhost:5173/*'
+          - - !Sub 'http://${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com/*'
+            - 'http://localhost:5173/*'
 
   # ── Feature I: Amazon SES (HTML alert cards; double opt-in through a contact list) ──
   SesIdentity:
@@ -1511,10 +1544,14 @@ Outputs:
   ApiUrl:
     Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
   FrontendUrl:
-    Value: !Sub 'https://${FrontendDistribution.DomainName}'
+    Value: !If
+      - UseCloudFront
+      - !Sub 'https://${FrontendDistribution.DomainName}'
+      - !Sub 'http://${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com'
   FrontendBucketName:
     Value: !Ref FrontendBucket
   FrontendDistributionId:
+    Condition: UseCloudFront
     Value: !Ref FrontendDistribution
   DataBucketName:
     Value: !Ref DataBucket

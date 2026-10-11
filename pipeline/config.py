@@ -16,7 +16,10 @@ MODEL_DIR = PROJECT_ROOT / "models" / "artifacts"
 
 # Create directories
 for d in [RAW_DIR, PROCESSED_DIR, SCENARIOS_DIR, MODEL_DIR]:
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass  # Read-only filesystem in Lambda environment (/var/task)
 
 # ─── Target City: Phoenix, AZ (legacy default — kept for the unused
 #     real-data extraction scripts 01_download.py..07_feature_engineering.py,
@@ -395,13 +398,19 @@ SCENARIO_RESULTS_FILE = SCENARIOS_DIR / "scenario_results.parquet"
 
 def city_processed_dir(city_id: str) -> Path:
     d = PROCESSED_DIR / city_id
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     return d
 
 
 def city_scenarios_dir(city_id: str) -> Path:
     d = SCENARIOS_DIR / city_id
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     return d
 
 

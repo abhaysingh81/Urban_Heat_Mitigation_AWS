@@ -2,6 +2,7 @@
 # One-command deploy of the whole HeatRelief stack.
 #   scripts/deploy.sh <alert-email> [bedrock-model-id]
 #   OFFICER_TOKEN=<secret> scripts/deploy.sh ...        # require a token to approve plans
+#   ENABLE_CLOUDFRONT=1 scripts/deploy.sh ...           # CloudFront CDN (defaults to 0 / S3 website while pending AWS verification)
 #   ENABLE_LOCATION_MAP=1 scripts/deploy.sh ...         # Amazon Location basemap + walking routes (else CARTO)
 #   ENABLE_KNOWLEDGE_BASE=1 scripts/deploy.sh ...       # Bedrock Knowledge Base for guidance (else local file)
 #   KB_MIN_SCORE=0.5 ...                                # knowledge-base relevance floor (default 0.4)
@@ -23,6 +24,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 EMAIL="${1:-}"; MODEL="${2:-}"; TOKEN="${OFFICER_TOKEN:-}"
 STACK="heatrelief"; REGION="us-east-1"   # must match infra/samconfig.toml
+CONFIG_FILE="${PWD}/infra/samconfig.toml"
 # every aws/sam call below targets the stack's region, whatever the CLI profile defaults to
 export AWS_DEFAULT_REGION="${REGION}" AWS_REGION="${REGION}"
 
@@ -37,6 +39,7 @@ else
   [ -n "${TOKEN}" ] && PARAMS+=("OfficerToken=${TOKEN}")
 fi
 # explicit true/false, so turning a feature off on a later run really removes it
+PARAMS+=("EnableCloudFront=$([ "${ENABLE_CLOUDFRONT:-0}" = "1" ] && echo true || echo false)")
 PARAMS+=("EnableLocationMap=$([ "${ENABLE_LOCATION_MAP:-0}" = "1" ] && echo true || echo false)")
 PARAMS+=("EnableKnowledgeBase=$([ "${ENABLE_KNOWLEDGE_BASE:-0}" = "1" ] && echo true || echo false)")
 PARAMS+=("AlertMinLevel=${ALERT_MIN_LEVEL:-orange}")   # always set, so the list is never empty
@@ -84,8 +87,18 @@ PY
   fi
 fi
 
-sam build -t infra/template.yaml
-sam deploy -t infra/template.yaml --config-file infra/samconfig.toml --no-fail-on-empty-changeset \
+sam build -t infra/template.yaml --config-file "${CONFIG_FILE}"
+
+STACK_STATUS="$(aws cloudformation describe-stacks --stack-name "${STACK}" --query "Stacks[0].StackStatus" --output text 2>/dev/null || true)"
+if [ "${STACK_STATUS}" = "ROLLBACK_COMPLETE" ]; then
+  echo "Stack '${STACK}' is in ROLLBACK_COMPLETE state from a prior failed attempt."
+  echo "Deleting failed stack so CloudFormation can create it cleanly..."
+  aws cloudformation delete-stack --stack-name "${STACK}"
+  aws cloudformation wait stack-delete-complete --stack-name "${STACK}"
+  echo "Failed stack deleted. Proceeding with fresh deployment."
+fi
+
+sam deploy --template-file .aws-sam/build/template.yaml --config-file "${CONFIG_FILE}" --no-fail-on-empty-changeset \
   --parameter-overrides "${PARAMS[*]} CanaryCodeKey=${CANARY_KEY}"
 API_URL="$(out ApiUrl)"; BUCKET="$(out FrontendBucketName)"; DIST="$(out FrontendDistributionId)"
 DATA_BUCKET="$(out DataBucketName)"
@@ -98,7 +111,7 @@ if [ -n "${CANARY_ZIP}" ] && [ "${CANARY_KEY}" = '""' ]; then
 fi
 
 # the CloudFront URL only exists after the first deploy: allow it in the API's CORS list
-sam deploy -t infra/template.yaml --config-file infra/samconfig.toml --no-confirm-changeset \
+sam deploy --template-file .aws-sam/build/template.yaml --config-file "${CONFIG_FILE}" --no-confirm-changeset \
   --no-fail-on-empty-changeset \
   --parameter-overrides "${PARAMS[*]} CanaryCodeKey=${CANARY_KEY} ExtraCorsOrigin=${FRONTEND_URL}"
 
@@ -150,7 +163,9 @@ fi
 ( cd frontend && npm ci --no-audit --no-fund && VITE_API_BASE_URL="${SITE_API}" \
     VITE_AWS_LOCATION_KEY="${MAP_KEY}" VITE_AWS_REGION="${REGION}" npm run build )
 aws s3 sync frontend/dist "s3://${BUCKET}" --delete --exclude "alert-maps/*"   # keep the daily alert maps
-aws cloudfront create-invalidation --distribution-id "${DIST}" --paths "/*" >/dev/null
+if [ -n "${DIST}" ] && [ "${DIST}" != "None" ]; then
+  aws cloudfront create-invalidation --distribution-id "${DIST}" --paths "/*" >/dev/null || true
+fi
 
 echo "API:      ${SITE_API}"
 echo "Frontend: ${FRONTEND_URL}"

@@ -77,7 +77,7 @@ function App() {
         <div className="sidebar-header">
           <div className="logo-icon">🔥</div>
           <div className="logo-text">
-            <h2>Urban Heat</h2>
+            <h2>HeatRelief</h2>
             <p>Urban Heat Island Tracker</p>
           </div>
           <button

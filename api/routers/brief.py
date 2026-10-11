@@ -26,7 +26,10 @@ class BriefBody(BaseModel):
 
 def _pdf_dir():
     d = aws.RUNTIME_DIR / "briefs"
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     return d
 
 

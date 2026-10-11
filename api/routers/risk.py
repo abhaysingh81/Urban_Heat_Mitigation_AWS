@@ -63,7 +63,10 @@ async def wards_csv(city_id: str = Depends(require_real)):
 
 def _cache_file(city_id: str):
     d = aws.RUNTIME_DIR / "risk_today"
-    d.mkdir(parents=True, exist_ok=True)
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     return d / f"{city_id}.json"
 
 

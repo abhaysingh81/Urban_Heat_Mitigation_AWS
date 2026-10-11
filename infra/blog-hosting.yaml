@@ -1,23 +1,40 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  HeatRelief blog: static site in a private S3 bucket served over HTTPS by CloudFront
-  (origin access control, no public bucket access).
+  HeatRelief blog: static site in S3, served directly via S3 website hosting or
+  over HTTPS by CloudFront.
+
+Parameters:
+  EnableCloudFront:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Enable CloudFront CDN. Leave false if AWS account is not yet verified for CloudFront.
+
+Conditions:
+  UseCloudFront: !Equals [!Ref EnableCloudFront, 'true']
+  UseS3Website: !Equals [!Ref EnableCloudFront, 'false']
 
 Resources:
   BlogBucket:
     Type: AWS::S3::Bucket
     Properties:
       PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
+        BlockPublicAcls: !If [UseCloudFront, true, false]
+        BlockPublicPolicy: !If [UseCloudFront, true, false]
+        IgnorePublicAcls: !If [UseCloudFront, true, false]
+        RestrictPublicBuckets: !If [UseCloudFront, true, false]
+      WebsiteConfiguration: !If
+        - UseS3Website
+        - IndexDocument: index.html
+          ErrorDocument: index.html
+        - !Ref 'AWS::NoValue'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
 
   BlogOAC:
     Type: AWS::CloudFront::OriginAccessControl
+    Condition: UseCloudFront
     Properties:
       OriginAccessControlConfig:
         Name: !Sub '${AWS::StackName}-oac'
@@ -27,6 +44,7 @@ Resources:
 
   BlogDistribution:
     Type: AWS::CloudFront::Distribution
+    Condition: UseCloudFront
     Properties:
       DistributionConfig:
         Enabled: true
@@ -52,8 +70,9 @@ Resources:
             ResponseCode: 200
             ResponsePagePath: /index.html
 
-  BlogBucketPolicy:
+  BlogCloudFrontBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: UseCloudFront
     Properties:
       Bucket: !Ref BlogBucket
       PolicyDocument:
@@ -68,10 +87,27 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${BlogDistribution}'
 
+  BlogWebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: UseS3Website
+    Properties:
+      Bucket: !Ref BlogBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${BlogBucket.Arn}/*'
+
 Outputs:
   BlogUrl:
-    Value: !Sub 'https://${BlogDistribution.DomainName}'
+    Value: !If
+      - UseCloudFront
+      - !Sub 'https://${BlogDistribution.DomainName}'
+      - !Sub 'http://${BlogBucket}.s3-website-${AWS::Region}.amazonaws.com'
   BlogBucketName:
     Value: !Ref BlogBucket
   BlogDistributionId:
-    Value: !Ref BlogDistribution
+    Value: !If [UseCloudFront, !Ref BlogDistribution, 'None']
