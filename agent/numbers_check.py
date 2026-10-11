@@ -6,8 +6,15 @@ appear in the facts the tools returned (or the vetted guidance text).
 from __future__ import annotations
 
 import re
+import unicodedata
 
-_DEVANAGARI = str.maketrans("०१२३४५६७८९", "0123456789")
+
+
+def _ascii_digits(text: str) -> str:
+    """Digits of any script (Devanagari, Bengali, Tamil, Telugu, Gujarati, Kannada …) as 0-9."""
+    return "".join(str(unicodedata.decimal(ch)) if not ch.isascii() and unicodedata.decimal(ch, None) is not None
+                   else ch for ch in text)
+
 _LIST_MARKER = re.compile(r"^\s*(?:[-*•]|\d{1,2}[.)])\s+", re.M)
 _NUMBER = re.compile(r"(?<![\w.])(\d[\d,]*(?:\.\d+)?)")
 
@@ -20,7 +27,7 @@ def _norm(token: str) -> str:
 
 
 def numbers_in(text: str) -> set[str]:
-    text = _LIST_MARKER.sub("", text.translate(_DEVANAGARI))
+    text = _LIST_MARKER.sub("", _ascii_digits(text))
     return {_norm(m) for m in _NUMBER.findall(text)}
 
 

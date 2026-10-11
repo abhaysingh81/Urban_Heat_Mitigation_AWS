@@ -168,4 +168,11 @@ def nearest_cooling_spots(city_id: str, lat: float, lon: float, k: int = 3) -> l
     a = np.sin(dlat / 2) ** 2 + np.cos(la) * np.cos(np.radians(arr[:, 0])) * np.sin(dlon / 2) ** 2
     dist = 2 * 6371000 * np.arcsin(np.sqrt(a))
     order = np.argsort(dist)[:k]
-    return [{**spots[i], "distance_m": int(dist[i])} for i in order]
+
+    def format_spot(i):
+        s = spots[i].copy()
+        if s["name"] in ("Node", "Way", "Water point", "Cooling center") or s["name"].isdigit():
+            s["name"] = s["type"].replace("_", " ").title()
+        return {**s, "distance_m": int(dist[i])}
+
+    return [format_spot(i) for i in order]

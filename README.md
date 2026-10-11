@@ -94,6 +94,8 @@ Without it the deterministic template brief is used (same facts, same number ver
 
 ## Deploy on AWS (one command)
 
+Step-by-step instructions for the account, every optional AWS feature, checks, costs and teardown: [docs/SETUP_AND_DEPLOYMENT.md](docs/SETUP_AND_DEPLOYMENT.md).
+
 ```bash
 scripts/deploy.sh you@example.com <bedrock-model-id>   # needs AWS creds, Docker, SAM CLI, Node
 ```

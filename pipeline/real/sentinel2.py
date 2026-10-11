@@ -9,7 +9,7 @@ from rasterio.enums import Resampling
 
 from pipeline.config import REAL_MONTHS, REAL_YEARS
 from pipeline.real.gridspec import GridSpec
-from pipeline.real.stac import open_catalog, read_to_grid, search
+from pipeline.real.stac import asset_href, open_catalog, read_to_grid, search, sentinel2_boa_offset
 
 FACTOR = 10  # 50 m
 MAX_SCENES = 8
@@ -17,12 +17,7 @@ MAX_SCENES = 8
 _SCL_BAD = (0, 1, 3, 8, 9, 10)
 
 
-def _reflectance(dn: np.ndarray, baseline: str) -> np.ndarray:
-    # Processing baseline >= 04.00 (Jan 2022+) adds a +1000 DN offset.
-    try:
-        offset = 1000.0 if float(baseline) >= 4.0 else 0.0
-    except (TypeError, ValueError):
-        offset = 1000.0
+def _reflectance(dn: np.ndarray, offset: float) -> np.ndarray:
     return np.clip((dn - offset) / 10000.0, 0, 1.5)
 
 
@@ -57,7 +52,7 @@ def build(spec: GridSpec) -> dict:
                 "scl": ("SCL", 0, Resampling.nearest, None),
             }
             with ThreadPoolExecutor(max_workers=5) as pool:
-                futs = {k: pool.submit(read_to_grid, item.assets[a].href, spec, FACTOR, rs,
+                futs = {k: pool.submit(read_to_grid, asset_href(item, a), spec, FACTOR, rs,
                                        nodata_in=nd, overview=ov)
                         for k, (a, ov, rs, nd) in jobs.items()}
                 red, nir, green, swir, scl = (futs[k].result() for k in
@@ -65,8 +60,8 @@ def build(spec: GridSpec) -> dict:
         except Exception as e:
             print(f"    [skip] {item.id}: {e}")
             continue
-        base = item.properties.get("s2:processing_baseline", "05.00")
-        r, n, g, s = (_reflectance(x, base) for x in (red, nir, green, swir))
+        offset = sentinel2_boa_offset(item)
+        r, n, g, s = (_reflectance(x, offset) for x in (red, nir, green, swir))
         bad = np.isin(np.nan_to_num(scl, nan=0).astype(int), _SCL_BAD)
         ndvi, ndbi, mndwi = _norm_diff(n, r), _norm_diff(s, n), _norm_diff(g, s)
         for arr in (ndvi, ndbi, mndwi):

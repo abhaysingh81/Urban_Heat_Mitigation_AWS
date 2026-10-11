@@ -1,0 +1,523 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  HeatRelief Cloud-Native Satellite Data Pipeline (Feature D).
+  Step Functions Standard State Machine orchestrating AWS Batch (Fargate/Fargate Spot)
+  for parallel city dataset generation, XGBoost model training, quality gate enforcement,
+  and S3 artifact publishing with requester-pays support for usgs-landsat in us-west-2.
+
+Parameters:
+  OpsEmail:
+    Type: String
+    Default: ''
+    Description: Email for pipeline success/failure notices (leave empty to skip). The main stack's OpsTopic is in another region, so this stack has its own.
+  StacUrl:
+    Type: String
+    Default: https://earth-search.aws.element84.com/v1
+    AllowedValues:
+      - https://earth-search.aws.element84.com/v1
+      - https://planetarycomputer.microsoft.com/api/stac/v1
+    Description: STAC catalogue. Earth Search reads Landsat/Sentinel-2 from AWS Open Data in this region; Planetary Computer is the catalogue the first dataset was built from.
+  CapacityType:
+    Type: String
+    Default: FARGATE_SPOT
+    AllowedValues: [FARGATE_SPOT, FARGATE]
+    Description: Fargate Spot is about 70 percent cheaper but AWS can stop a task at short notice (the job is then retried once). FARGATE is never interrupted.
+  EphemeralStorageGB:
+    Type: Number
+    Default: 50
+    MinValue: 21
+    MaxValue: 200
+    Description: Fargate ephemeral storage size in GiB for scene caching
+
+Conditions:
+  HasOpsEmail: !Not [!Equals [!Ref OpsEmail, '']]
+
+Resources:
+  # ─── Network: public subnets only, tasks get a public IP (no NAT gateway to pay for) ───
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.42.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [{Key: Name, Value: !Sub '${AWS::StackName}'}]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: {VpcId: !Ref Vpc, InternetGatewayId: !Ref InternetGateway}
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.42.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.42.1.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: {VpcId: !Ref Vpc}
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties: {RouteTableId: !Ref PublicRouteTable, DestinationCidrBlock: 0.0.0.0/0, GatewayId: !Ref InternetGateway}
+
+  SubnetARoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref PublicSubnetA, RouteTableId: !Ref PublicRouteTable}
+
+  SubnetBRoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: {SubnetId: !Ref PublicSubnetB, RouteTableId: !Ref PublicRouteTable}
+
+  TaskSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HeatRelief pipeline tasks - outbound only
+      VpcId: !Ref Vpc
+
+  # ─── Container image (pushed by scripts/deploy_pipeline.sh) ────────
+  PipelineRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      EmptyOnDelete: true
+      LifecyclePolicy:
+        LifecyclePolicyText: '{"rules":[{"rulePriority":1,"description":"keep the last 3 images","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":3},"action":{"type":"expire"}}]}'
+
+  # ─── Notifications (same region as the state machine and its alarm) ─
+  OpsTopic:
+    Type: AWS::SNS::Topic
+    Properties: {DisplayName: HeatRelief pipeline}
+
+  OpsEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasOpsEmail
+    Properties: {TopicArn: !Ref OpsTopic, Protocol: email, Endpoint: !Ref OpsEmail}
+
+  # ─── S3 Pipeline Lake ──────────────────────────────────────────────
+  PipelineBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireRawCacheAfter60Days
+            Prefix: cache/
+            Status: Enabled
+            ExpirationInDays: 60
+          - Id: TransitionOldRunsToIA
+            Prefix: runs/
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: STANDARD_IA
+
+  # ─── IAM Roles ─────────────────────────────────────────────────────
+  BatchServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: batch.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole
+
+  BatchTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  BatchJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: PipelineBucketAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${PipelineBucket}"
+                  - !Sub "arn:aws:s3:::${PipelineBucket}/*"
+        - PolicyName: UsgsLandsatRequesterPaysAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - arn:aws:s3:::usgs-landsat/*
+
+  StepFunctionsExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: BatchJobManagement
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - batch:SubmitJob
+                  - batch:DescribeJobs
+                  - batch:TerminateJob
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - events:PutTargets
+                  - events:PutRule
+                  - events:DescribeRule
+                Resource:
+                  - !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventsForBatchJobsRule"
+        - PolicyName: SnsPublishAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref OpsTopic
+
+  # ─── AWS Batch Resources ───────────────────────────────────────────
+  BatchComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    DependsOn: [PublicRoute, SubnetARoute, SubnetBRoute]   # tasks need the internet route from their first second
+    Properties:
+      Type: MANAGED
+      ServiceRole: !GetAtt BatchServiceRole.Arn
+      ComputeResources:
+        Type: !Ref CapacityType
+        MaxvCpus: 16
+        Subnets: [!Ref PublicSubnetA, !Ref PublicSubnetB]
+        SecurityGroupIds:
+          - !Ref TaskSecurityGroup
+      State: ENABLED
+
+  BatchJobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      Priority: 1
+      State: ENABLED
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment: !Ref BatchComputeEnvironment
+
+  DatasetBuildJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      Type: container
+      PlatformCapabilities:
+        - FARGATE
+      RetryStrategy:
+        Attempts: 2
+      Timeout:
+        AttemptDurationSeconds: 3600
+      ContainerProperties:
+        Image: !Sub '${PipelineRepository.RepositoryUri}:latest'
+        RuntimePlatform: {OperatingSystemFamily: LINUX, CpuArchitecture: X86_64}
+        ExecutionRoleArn: !GetAtt BatchTaskExecutionRole.Arn
+        JobRoleArn: !GetAtt BatchJobRole.Arn
+        ResourceRequirements:
+          - Type: VCPU
+            Value: '4'
+          - Type: MEMORY
+            Value: '16384'
+        EphemeralStorage:
+          SizeInGiB: !Ref EphemeralStorageGB
+        NetworkConfiguration:
+          AssignPublicIp: ENABLED
+        Environment:
+          - Name: S3_PIPELINE_BUCKET
+            Value: !Ref PipelineBucket
+          - Name: AWS_REQUEST_PAYER
+            Value: requester
+          - Name: STAC_URL
+            Value: !Ref StacUrl
+
+  ModelTrainJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      Type: container
+      PlatformCapabilities:
+        - FARGATE
+      RetryStrategy:
+        Attempts: 2   # second try covers a Spot interruption; a failed quality gate fails again and stops the run
+      Timeout:
+        AttemptDurationSeconds: 3600
+      ContainerProperties:
+        Image: !Sub '${PipelineRepository.RepositoryUri}:latest'
+        RuntimePlatform: {OperatingSystemFamily: LINUX, CpuArchitecture: X86_64}
+        ExecutionRoleArn: !GetAtt BatchTaskExecutionRole.Arn
+        JobRoleArn: !GetAtt BatchJobRole.Arn
+        ResourceRequirements:
+          - Type: VCPU
+            Value: '4'
+          - Type: MEMORY
+            Value: '16384'
+        EphemeralStorage:
+          SizeInGiB: !Ref EphemeralStorageGB
+        NetworkConfiguration:
+          AssignPublicIp: ENABLED
+        Environment:
+          - Name: S3_PIPELINE_BUCKET
+            Value: !Ref PipelineBucket
+          - Name: AWS_REQUEST_PAYER
+            Value: requester
+
+  # ─── Step Functions State Machine ──────────────────────────────────
+  PipelineStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineType: STANDARD
+      RoleArn: !GetAtt StepFunctionsExecutionRole.Arn
+      DefinitionString: !Sub |
+        {
+          "Comment": "HeatRelief Cloud-Native Satellite Data & Training Pipeline",
+          "StartAt": "SetupPipelineRun",
+          "States": {
+            "SetupPipelineRun": {
+              "Type": "Pass",
+              "Parameters": {
+                "cities.$": "$.cities",
+                "run_id.$": "$.run_id"
+              },
+              "Next": "BuildCityDatasets"
+            },
+            "BuildCityDatasets": {
+              "Type": "Map",
+              "ItemsPath": "$.cities",
+              "MaxConcurrency": 4,
+              "Parameters": {
+                "city.$": "$$.Map.Item.Value",
+                "run_id.$": "$.run_id"
+              },
+              "Iterator": {
+                "StartAt": "SubmitBuildJob",
+                "States": {
+                  "SubmitBuildJob": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::batch:submitJob.sync",
+                    "Parameters": {
+                      "JobName.$": "States.Format('build-dataset-{}', $.city)",
+                      "JobQueue": "${BatchJobQueue}",
+                      "JobDefinition": "${DatasetBuildJobDefinition}",
+                      "ContainerOverrides": {
+                        "Command.$": "States.Array('python', '-m', 'pipeline.real.build_dataset', $.city)",
+                        "Environment": [
+                          {
+                            "Name": "RUN_ID",
+                            "Value.$": "$.run_id"
+                          },
+                          {
+                            "Name": "S3_PIPELINE_BUCKET",
+                            "Value": "${PipelineBucket}"
+                          }
+                        ]
+                      }
+                    },
+                    "End": true
+                  }
+                }
+              },
+              "ResultPath": "$.build_results",
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "ResultPath": "$.error",
+                  "Next": "NotifyFailure"
+                }
+              ],
+              "Next": "TrainModel"
+            },
+            "TrainModel": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::batch:submitJob.sync",
+              "Parameters": {
+                "JobName.$": "States.Format('train-model-{}', $.run_id)",
+                "JobQueue": "${BatchJobQueue}",
+                "JobDefinition": "${ModelTrainJobDefinition}",
+                "ContainerOverrides": {
+                  "Command": [
+                    "python",
+                    "-m",
+                    "models.train_real"
+                  ],
+                  "Environment": [
+                    {
+                      "Name": "RUN_ID",
+                      "Value.$": "$.run_id"
+                    },
+                    {
+                      "Name": "S3_PIPELINE_BUCKET",
+                      "Value": "${PipelineBucket}"
+                    }
+                  ]
+                }
+              },
+              "ResultPath": "$.train_result",
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "ResultPath": "$.error",
+                  "Next": "NotifyFailure"
+                }
+              ],
+              "Next": "NotifySuccess"
+            },
+            "NotifySuccess": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.run_id",
+                  "IsPresent": true,
+                  "Next": "PublishDatasetReadyNotification"
+                }
+              ],
+              "Default": "SuccessState"
+            },
+            "PublishDatasetReadyNotification": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sns:publish",
+              "Parameters": {
+                "TopicArn": "${OpsTopic}",
+                "Subject": "HeatRelief Pipeline: Dataset & Model Ready",
+                "Message.$": "States.Format('Dataset and model artifacts successfully built and validated for run {}. Artifacts stored in s3://${PipelineBucket}/runs/{}/', $.run_id, $.run_id)"
+              },
+              "Next": "SuccessState",
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "SuccessState"
+                }
+              ]
+            },
+            "SuccessState": {
+              "Type": "Succeed"
+            },
+            "NotifyFailure": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.error",
+                  "IsPresent": true,
+                  "Next": "PublishFailureNotification"
+                }
+              ],
+              "Default": "FailState"
+            },
+            "PublishFailureNotification": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sns:publish",
+              "Parameters": {
+                "TopicArn": "${OpsTopic}",
+                "Subject": "HeatRelief Pipeline: Job Failed",
+                "Message.$": "States.Format('Pipeline execution failed or quality gate rejected model. Run ID: {}. Details: {}', $.run_id, States.JsonToString($.error))"
+              },
+              "Next": "FailState",
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "Next": "FailState"
+                }
+              ]
+            },
+            "FailState": {
+              "Type": "Fail",
+              "Error": "PipelineFailed",
+              "Cause": "Pipeline step failed or quality gate was not satisfied."
+            }
+          }
+        }
+
+  # ─── CloudWatch Alarm ──────────────────────────────────────────────
+  PipelineExecutionFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarms when the HeatRelief Step Functions pipeline fails
+      Namespace: AWS/States
+      MetricName: ExecutionsFailed
+      Dimensions:
+        - Name: StateMachineArn
+          Value: !Ref PipelineStateMachine
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref OpsTopic]
+
+Outputs:
+  PipelineBucketName:
+    Value: !Ref PipelineBucket
+    Description: S3 Bucket holding raw cache and pipeline runs
+  PipelineRepositoryUri:
+    Value: !GetAtt PipelineRepository.RepositoryUri
+    Description: ECR repository the pipeline image is pushed to
+  OpsTopicArn:
+    Value: !Ref OpsTopic
+    Description: SNS topic for pipeline notices
+  PipelineStateMachineArn:
+    Value: !Ref PipelineStateMachine
+    Description: ARN of the Step Functions Pipeline State Machine
+  BatchJobQueueArn:
+    Value: !Ref BatchJobQueue
+    Description: ARN of the AWS Batch Job Queue
+  DatasetBuildJobDefinitionArn:
+    Value: !Ref DatasetBuildJobDefinition
+    Description: ARN of the Dataset Build Job Definition
+  ModelTrainJobDefinitionArn:
+    Value: !Ref ModelTrainJobDefinition
+    Description: ARN of the Model Train Job Definition

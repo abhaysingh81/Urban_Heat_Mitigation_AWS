@@ -74,9 +74,30 @@ def set_plan_status(plan_id: str, status: str, actor: str = "officer", note: str
 
 
 # ── citizen reports ──────────────────────────────────────────
+REPORT_STATUSES = ("new", "verified", "dispatched", "resolved", "rejected")
+
+
 def save_report(city_id: str, grid_id: str, kind: str, note: str, photo_key: str | None) -> dict:
     doc = {"id": uuid.uuid4().hex[:12], "city_id": city_id, "grid_id": grid_id, "kind": kind,
-           "note": note[:300], "photo_key": photo_key, "created_at": _now(), "ts": int(time.time())}
+           "note": note[:300], "photo_key": photo_key, "created_at": _now(), "ts": int(time.time()),
+           "status": "new", "audit": []}
+    _put(aws.REPORTS_TABLE, "reports", doc)
+    return doc
+
+
+def get_report(report_id: str) -> dict | None:
+    return _get(aws.REPORTS_TABLE, "reports", report_id)
+
+
+def set_report_status(report_id: str, status: str, actor: str = "officer", note: str = "") -> dict:
+    """Field verification by a ward officer: new -> verified -> dispatched -> resolved (or rejected)."""
+    if status not in REPORT_STATUSES:
+        raise ValueError(f"status must be one of {REPORT_STATUSES}")
+    doc = get_report(report_id)
+    if doc is None:
+        raise KeyError(report_id)
+    doc["status"] = status
+    doc.setdefault("audit", []).append({"at": _now(), "status": status, "actor": actor[:60], "note": note[:300]})
     _put(aws.REPORTS_TABLE, "reports", doc)
     return doc
 
@@ -84,7 +105,13 @@ def save_report(city_id: str, grid_id: str, kind: str, note: str, photo_key: str
 def list_reports(city_id: str) -> list[dict]:
     if aws.REPORTS_TABLE:
         from boto3.dynamodb.conditions import Attr
-        items = aws.table(aws.REPORTS_TABLE).scan(FilterExpression=Attr("city_id").eq(city_id)).get("Items", [])
+        table, items, kwargs = aws.table(aws.REPORTS_TABLE), [], {"FilterExpression": Attr("city_id").eq(city_id)}
+        while True:  # a scan returns at most 1 MB per call
+            page = table.scan(**kwargs)
+            items += page.get("Items", [])
+            if "LastEvaluatedKey" not in page:
+                break
+            kwargs["ExclusiveStartKey"] = page["LastEvaluatedKey"]
         return [json.loads(i["body"]) for i in items]
     out = []
     for f in _dir("reports").glob("*.json"):
@@ -92,3 +119,27 @@ def list_reports(city_id: str) -> list[dict]:
         if d.get("city_id") == city_id:
             out.append(d)
     return out
+
+
+# ── street sensors (Feature G: AWS IoT Core) ─────────────────
+# On AWS the IoT rule writes each reading straight into DynamoDB (latest reading per sensor in
+# SENSOR_LATEST_TABLE, keyed by city + sensor_id). Locally the simulator writes JSON files.
+def put_sensor_reading(reading: dict) -> None:
+    """Local store only; on AWS readings arrive through IoT Core, never through the API."""
+    (_dir("sensors") / f"{reading['city']}__{reading['sensor_id']}.json").write_text(json.dumps(reading))
+
+
+def list_sensor_readings(city_id: str) -> list[dict]:
+    import os
+    table_name = os.environ.get("SENSOR_LATEST_TABLE")
+    if table_name:
+        from boto3.dynamodb.conditions import Key
+        table, items, kwargs = aws.table(table_name), [], {"KeyConditionExpression": Key("city").eq(city_id)}
+        while True:
+            page = table.query(**kwargs)
+            items += page.get("Items", [])
+            if "LastEvaluatedKey" not in page:
+                break
+            kwargs["ExclusiveStartKey"] = page["LastEvaluatedKey"]
+        return items
+    return [d for d in (json.loads(f.read_text()) for f in _dir("sensors").glob(f"{city_id}__*.json"))]

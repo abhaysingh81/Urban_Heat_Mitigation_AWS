@@ -46,6 +46,11 @@ def build_pdf(brief: dict) -> bytes:
     pdf.ln(5)
     font("deva", 11)
     pdf.multi_cell(0, 7, clean(brief["brief_hi"], latin_only=False), new_x="LMARGIN", new_y="NEXT")
+    if brief.get("sources"):
+        pdf.ln(4)
+        font("latin", 9)
+        refs = "; ".join(f"[S{i}] {name}" for i, name in enumerate(brief["sources"], 1))
+        pdf.multi_cell(0, 5, clean(f"Guidance sources: {refs}"), new_x="LMARGIN", new_y="NEXT")
     if not fonts_ok:
         pdf.ln(3)
         font("latin", 8)

@@ -33,6 +33,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Model-Version", "X-Data-Date"],
 )
 
 # Compress large responses (city grids are several MB of GeoJSON; Lambda caps responses at 6 MB)
@@ -49,6 +50,22 @@ app.include_router(brief.router)
 app.include_router(reports.router)
 app.include_router(meta.router)
 app.include_router(lab.router)
+
+from api.routers import alerts, sensors, system
+app.include_router(alerts.router)
+app.include_router(system.router)
+app.include_router(sensors.router)
+
+
+@app.middleware("http")
+async def edge_only(request, call_next):
+    """With AWS WAF enabled the API is published through CloudFront, which adds a secret header.
+    A request without it came straight to API Gateway, around the firewall, and is refused."""
+    from api import net
+    if net.edge_secret() and not net.came_through_edge(request.headers):
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"detail": "Use the site address for this API."}, status_code=403)
+    return await call_next(request)
 
 
 @app.middleware("http")

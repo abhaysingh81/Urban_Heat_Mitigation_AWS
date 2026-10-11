@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+from pathlib import Path
 import pickle
 from datetime import datetime, timezone
 
@@ -21,13 +23,15 @@ import pandas as pd
 
 from pipeline.config import (
     HOTSPOT_TIERS, REAL_CITIES, REAL_RAW_DIR, city_cooling_spots_file,
-    city_data_card_file, city_real_features_file,
+    city_data_card_file, city_processed_dir, city_real_features_file,
 )
 from pipeline.real import (
     context_features, landcover, landsat_composite, osm_features, population,
     sentinel2, terrain, wards, weather,
 )
 from pipeline.real.gridspec import GridSpec
+
+from pipeline.real.s3_sync import sync_s3_down, sync_s3_up
 
 STAGES = ["landsat", "sentinel2", "landcover", "terrain", "osm", "population", "weather"]
 LICENCES = {
@@ -88,95 +92,125 @@ def write_grid_geojson(spec: GridSpec) -> None:
     city_grid_file(spec.city_id).write_text(json.dumps({"type": "FeatureCollection", "features": feats}))
 
 
-def build_city(city_id: str, skip: set[str] = frozenset(), refresh: set[str] = frozenset()):
-    spec = GridSpec.for_city(city_id)
-    print(f"\n=== {city_id}: {spec.rows}x{spec.cols} = {spec.n_cells} cells ===")
-    arrays: dict[str, np.ndarray] = {}
-    card = {"city_id": city_id, "built_at": datetime.now(timezone.utc).isoformat(),
-            "sources": {}, "skipped": sorted(skip), "notes": []}
+def build_city(city_id: str, skip: set[str] = frozenset(), refresh: set[str] = frozenset(),
+               bucket: str | None = None, run_id: str | None = None):
+    bucket = bucket or os.environ.get("S3_PIPELINE_BUCKET")
+    run_id = run_id or os.environ.get("RUN_ID", datetime.now(timezone.utc).strftime("real-v1-%Y%m%d"))
+    cache_dir = REAL_RAW_DIR / city_id
 
-    land = _cached(city_id, "landsat", lambda: landsat_composite.build(spec), refresh)
-    arrays.update(land["arrays"])
-    scene_dates = sorted({s["date"] for s in land["scenes"]})
-    card["sources"]["landsat"] = {"licence": LICENCES["landsat"], "scenes": land["scenes"]}
+    # 1. Sync down stage cache from S3 if configured
+    if bucket:
+        print(f"  [s3] syncing cache from s3://{bucket}/cache/{city_id}/ -> {cache_dir}")
+        sync_s3_down(bucket, f"cache/{city_id}", cache_dir)
 
-    simple = [("sentinel2", sentinel2), ("landcover", landcover), ("terrain", terrain)]
-    for name, mod in simple:
-        if name in skip:
-            continue
-        res = _cached(city_id, name, lambda m=mod: m.build(spec), refresh)
-        arrays.update(res["arrays"])
-        card["sources"][name] = {"licence": LICENCES[name],
-                                 **{k: v for k, v in res.items() if k != "arrays"}}
+    try:
+        spec = GridSpec.for_city(city_id)
+        print(f"\n=== {city_id}: {spec.rows}x{spec.cols} = {spec.n_cells} cells ===")
+        arrays: dict[str, np.ndarray] = {}
+        card = {"city_id": city_id, "built_at": datetime.now(timezone.utc).isoformat(),
+                "sources": {}, "skipped": sorted(skip), "notes": []}
 
-    cooling_spots = []
-    if "osm" not in skip:
-        osm = _cached(city_id, "osm", lambda: osm_features.build(spec), refresh)
-        arrays.update(osm["arrays"])
-        cooling_spots = osm["cooling_spots"]
-        card["sources"]["osm"] = {"licence": LICENCES["osm"],
-                                  "tile_coverage": osm["osm_tile_coverage"],
-                                  "n_buildings": osm["n_buildings"]}
-        if np.isnan(osm["arrays"]["building_density"]).all():
-            card["notes"].append("OSM building features not collected (opt-in); the model does not use them.")
+        land = _cached(city_id, "landsat", lambda: landsat_composite.build(spec), refresh)
+        arrays.update(land["arrays"])
+        scene_dates = sorted({s["date"] for s in land["scenes"]})
+        card["sources"]["landsat"] = {"licence": LICENCES["landsat"], "scenes": land["scenes"]}
 
-    if "population" not in skip:
-        pop = _cached(city_id, "population",
-                      lambda: population.build(spec, arrays.get("building_density")), refresh)
-        arrays.update(pop["arrays"])
-        card["sources"]["population"] = {"licence": LICENCES["population"],
-                                         "source": pop["source"]}
-        if pop["source"] != "meta_hrsl_30m":
-            card["notes"].append("Population is a building-count proxy, not HRSL.")
+        simple = [("sentinel2", sentinel2), ("landcover", landcover), ("terrain", terrain)]
+        for name, mod in simple:
+            if name in skip:
+                continue
+            res = _cached(city_id, name, lambda m=mod: m.build(spec), refresh)
+            arrays.update(res["arrays"])
+            card["sources"][name] = {"licence": LICENCES[name],
+                                     **{k: v for k, v in res.items() if k != "arrays"}}
 
-    weather_scalars = {}
-    if "weather" not in skip:
-        w = _cached(city_id, "weather", lambda: weather.build(city_id, scene_dates), refresh)
-        weather_scalars = w["scalars"]
-        card["sources"]["weather"] = {"licence": LICENCES["weather"], **w}
+        cooling_spots = []
+        if "osm" not in skip:
+            osm = _cached(city_id, "osm", lambda: osm_features.build(spec), refresh)
+            arrays.update(osm["arrays"])
+            cooling_spots = osm["cooling_spots"]
+            card["sources"]["osm"] = {"licence": LICENCES["osm"],
+                                      "tile_coverage": osm["osm_tile_coverage"],
+                                      "n_buildings": osm["n_buildings"]}
+            if np.isnan(osm["arrays"]["building_density"]).all():
+                card["notes"].append("OSM building features not collected (opt-in); the model does not use them.")
 
-    arrays.update(context_features.build(arrays))
+        if "population" not in skip:
+            pop = _cached(city_id, "population",
+                          lambda: population.build(spec, arrays.get("building_density")), refresh)
+            arrays.update(pop["arrays"])
+            card["sources"]["population"] = {"licence": LICENCES["population"],
+                                             "source": pop["source"]}
+            if pop["source"] != "meta_hrsl_30m":
+                card["notes"].append("Population is a building-count proxy, not HRSL.")
 
-    # ── assemble per-cell table ──
-    lon, lat = spec.cell_centers_lonlat()
-    idx = np.arange(spec.n_cells)
-    row, col = spec.idx_to_rowcol(idx)
-    df = pd.DataFrame({"grid_id": spec.grid_ids(), "row": row, "col": col,
-                       "centroid_lon": lon, "centroid_lat": lat})
-    for name, arr in arrays.items():
-        df[name] = spec.array_to_cells(arr)
-    for k, v in weather_scalars.items():
-        df[k] = v
+        weather_scalars = {}
+        if "weather" not in skip:
+            w = _cached(city_id, "weather", lambda: weather.build(city_id, scene_dates), refresh)
+            weather_scalars = w["scalars"]
+            card["sources"]["weather"] = {"licence": LICENCES["weather"], **w}
 
-    # derived, physically meaningful features
-    veg = df.get("frac_vegetation")
-    if veg is not None:
-        df["green_deficit"] = (1.0 - df["frac_vegetation"].fillna(0)).clip(0, 1)
-        df["veg_imperv_ratio"] = df["frac_vegetation"] / (df["frac_impervious"] + 0.01)
+        arrays.update(context_features.build(arrays))
 
-    wd = wards.assign(spec)
-    df["ward_id"], df["ward_name"] = wd["ward_id"], wd["ward_name"]
-    df["tier"] = assign_tiers(df["lst_c"].to_numpy())
-    df["lst_mean"] = df["lst_c"]  # legacy column name used by existing API code
-    df["lst_max"] = df["lst_c"] + df["lst_std"].fillna(0)
-    df["delta_above_mean"] = (df["lst_mean"] - df["lst_mean"].mean()).round(2)
-    ps = np.clip(df["delta_above_mean"], 0, None) / (df["frac_vegetation"].fillna(0.1) + 0.01)
-    df["priority_score"] = (ps / ps.max() * 10).round(1) if ps.max() > 0 else 0.0
+        # ── assemble per-cell table ──
+        lon, lat = spec.cell_centers_lonlat()
+        idx = np.arange(spec.n_cells)
+        row, col = spec.idx_to_rowcol(idx)
+        df = pd.DataFrame({"grid_id": spec.grid_ids(), "row": row, "col": col,
+                           "centroid_lon": lon, "centroid_lat": lat})
+        for name, arr in arrays.items():
+            df[name] = spec.array_to_cells(arr)
+        for k, v in weather_scalars.items():
+            df[k] = v
 
-    out = city_real_features_file(city_id)
-    df.to_parquet(out, index=False)
-    write_grid_geojson(spec)
-    city_cooling_spots_file(city_id).write_text(json.dumps(cooling_spots))
-    card.update({
-        "n_cells": int(len(df)),
-        "target_valid_cells": int(df["lst_c"].notna().sum()),
-        "ward_kind": wd["kind"],
-        "lst_c": {"mean": round(float(df["lst_c"].mean()), 2),
-                  "std": round(float(df["lst_c"].std()), 2)},
-        "features": [c for c in df.columns],
-    })
-    city_data_card_file(city_id).write_text(json.dumps(card, indent=2, default=str))
-    print(f"  wrote {out}  (target valid {card['target_valid_cells']}/{len(df)})")
+        # derived, physically meaningful features
+        veg = df.get("frac_vegetation")
+        if veg is not None:
+            df["green_deficit"] = (1.0 - df["frac_vegetation"].fillna(0)).clip(0, 1)
+            df["veg_imperv_ratio"] = df["frac_vegetation"] / (df["frac_impervious"] + 0.01)
+
+        wd = wards.assign(spec)
+        df["ward_id"], df["ward_name"] = wd["ward_id"], wd["ward_name"]
+        df["tier"] = assign_tiers(df["lst_c"].to_numpy())
+        df["lst_mean"] = df["lst_c"]  # legacy column name used by existing API code
+        df["lst_max"] = df["lst_c"] + df["lst_std"].fillna(0)
+        df["delta_above_mean"] = (df["lst_mean"] - df["lst_mean"].mean()).round(2)
+        ps = np.clip(df["delta_above_mean"], 0, None) / (df["frac_vegetation"].fillna(0.1) + 0.01)
+        df["priority_score"] = (ps / ps.max() * 10).round(1) if ps.max() > 0 else 0.0
+
+        out = city_real_features_file(city_id)
+        df.to_parquet(out, index=False)
+        write_grid_geojson(spec)
+        city_cooling_spots_file(city_id).write_text(json.dumps(cooling_spots))
+        card.update({
+            "n_cells": int(len(df)),
+            "target_valid_cells": int(df["lst_c"].notna().sum()),
+            "ward_kind": wd["kind"],
+            "lst_c": {"mean": round(float(df["lst_c"].mean()), 2),
+                      "std": round(float(df["lst_c"].std()), 2)},
+            "features": [c for c in df.columns],
+        })
+        try:  # map labels only; a busy Overpass server must not fail the build
+            from pipeline.real import areas
+            named = areas.build(city_id)
+            card["area_names"] = {"n_named": named["n_named"], "n_places": named["n_places"]}
+        except Exception as e:
+            card["notes"].append(f"Area names not refreshed ({type(e).__name__}).")
+        city_data_card_file(city_id).write_text(json.dumps(card, indent=2, default=str))
+        print(f"  wrote {out}  (target valid {card['target_valid_cells']}/{len(df)})")
+
+    finally:
+        # 2. Persist stage cache up to S3 on exit (including failures so re-runs resume)
+        if bucket:
+            print(f"  [s3] persisting cache to s3://{bucket}/cache/{city_id}/")
+            sync_s3_up(cache_dir, bucket, f"cache/{city_id}")
+
+    # 3. Upload processed outputs to S3
+    if bucket:
+        proc_dir = city_processed_dir(city_id)
+        print(f"  [s3] uploading processed outputs to s3://{bucket}/runs/{run_id}/processed/{city_id}/")
+        sync_s3_up(proc_dir, bucket, f"runs/{run_id}/processed/{city_id}", strict=True)
+
     return df
 
 
@@ -185,13 +219,15 @@ def main():
     ap.add_argument("cities", nargs="*", default=REAL_CITIES)
     ap.add_argument("--skip", default="", help="comma list of stages to skip")
     ap.add_argument("--refresh", default="", help="comma list of stages to rebuild (or 'all')")
+    ap.add_argument("--bucket", default="", help="S3 pipeline bucket name (or S3_PIPELINE_BUCKET env)")
+    ap.add_argument("--run-id", default="", help="Pipeline run identifier (or RUN_ID env)")
     a = ap.parse_args()
     skip = {s for s in a.skip.split(",") if s}
     refresh = {s for s in a.refresh.split(",") if s}
     for bad in (skip | refresh) - set(STAGES) - {"all"}:
         raise SystemExit(f"unknown stage '{bad}'; stages: {STAGES}")
     for c in a.cities:
-        build_city(c, skip, refresh)
+        build_city(c, skip, refresh, bucket=a.bucket or None, run_id=a.run_id or None)
 
 
 if __name__ == "__main__":

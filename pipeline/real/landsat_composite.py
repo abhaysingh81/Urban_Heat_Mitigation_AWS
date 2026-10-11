@@ -18,7 +18,7 @@ from pipeline.config import (
     REAL_MIN_SCENES, REAL_MONTHS, REAL_YEARS,
 )
 from pipeline.real.gridspec import GridSpec
-from pipeline.real.stac import open_catalog, read_to_grid, search
+from pipeline.real.stac import asset_href, open_catalog, read_to_grid, search
 
 FACTOR = 10  # 50 m fine grid (Landsat is 30 m)
 # QA_PIXEL bits: 1 dilated cloud, 2 cirrus, 3 cloud, 4 cloud shadow
@@ -45,9 +45,9 @@ def find_scenes(spec: GridSpec, catalog=None) -> list:
 
 def _scene_lst_c(item, spec: GridSpec) -> np.ndarray | None:
     try:
-        st = read_to_grid(item.assets["lwir11"].href, spec, FACTOR,
+        st = read_to_grid(asset_href(item, "lwir11"), spec, FACTOR,
                           Resampling.bilinear, nodata_in=0)
-        qa = read_to_grid(item.assets["qa_pixel"].href, spec, FACTOR,
+        qa = read_to_grid(asset_href(item, "qa_pixel"), spec, FACTOR,
                           Resampling.nearest, nodata_in=None, dtype=np.float32)
     except Exception as e:
         print(f"    [skip] {item.id}: {e}")

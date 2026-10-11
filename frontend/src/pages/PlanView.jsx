@@ -137,6 +137,7 @@ export default function PlanView({ city, cityInfo }) {
               </div>
               {brief && (<>
                 <div className="dec-note" style={{ marginTop: 8 }}>{t('source')}: {brief.source}{brief.note ? ` (${brief.note})` : ''} · numbers verified: {String(brief.numbers_verified)}</div>
+                {brief.sources?.length > 0 && <div className="dec-note">{t('guidance_sources')}: {brief.sources.map((n, i) => `[S${i + 1}] ${n}`).join('; ')}</div>}
                 <div className="brief-box">{brief.brief_en}</div>
                 <div className="brief-box">{brief.brief_hi}</div>
               </>)}

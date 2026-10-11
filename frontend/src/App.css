@@ -340,3 +340,7 @@
 .page-header p {
   color: var(--text-secondary);
 }
+
+.deck-tooltip {
+  white-space: pre-wrap !important;
+}

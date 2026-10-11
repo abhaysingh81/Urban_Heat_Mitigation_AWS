@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { API_BASE } from '../api';
 import { useLang } from '../i18n';
@@ -10,6 +10,7 @@ const riskColor = (v) => `hsl(${Math.round(55 - v * 0.55)}, 90%, 50%)`; // yello
 export default function RiskView({ city, cityInfo }) {
   const { t } = useLang();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [data, setData] = useState(null);
   const [today, setToday] = useState(null);
   const [error, setError] = useState(null);
@@ -19,11 +20,13 @@ export default function RiskView({ city, cityInfo }) {
   useEffect(() => {
     if (!real) return;
     let off = false;
+    const sim = params.get('simulate');
+    const simStr = sim ? `&simulate=${sim}` : '';
     fetch(`${API_BASE}/api/v1/risk/wards?city=${city}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('risk'))))
       .then((d) => { if (!off) { setData(d); setSel(d.wards[0]?.ward_id); } })
       .catch(() => !off && setError(t('error')));
-    fetch(`${API_BASE}/api/v1/risk/today?city=${city}`)
+    fetch(`${API_BASE}/api/v1/risk/today?city=${city}${simStr}`)
       .then((r) => (r.ok ? r.json() : null)).then((d) => !off && setToday(d)).catch(() => {});
     return () => { off = true; };
   }, [city, real, t]);
@@ -37,10 +40,11 @@ export default function RiskView({ city, cityInfo }) {
 
   return (
     <div className="page-container"><div className="page-content">
-      <div className="page-header"><h1>{t('risk_title')}</h1><p>{t('risk_sub')}</p></div>
+      <div className="page-header"><h1>{data.method.boundary_type === 'official_boundaries' ? t('risk_title') : t('zone_title')}</h1><p>{t('risk_sub')}</p></div>
 
       {today && (
         <div className="glass-panel dec-card" style={{ marginBottom: 16 }}>
+          {today.simulated && <div className="simulation-banner">SIMULATION</div>}
           <b>{t('today')}: </b><span className={`pill ${today.alert_level}`}>{today.alert_level.toUpperCase()}</span>{' '}
           {t('forecast_high')} {today.forecast_tmax_c}°C
           {today.stale && <span className="dec-note"> · {t('stale')} ({today.source})</span>}
@@ -49,7 +53,7 @@ export default function RiskView({ city, cityInfo }) {
 
       <div className="dec-grid two">
         <div className="glass-panel dec-card">
-          <h3>{t('ward')}</h3>
+          <h3>{data.method.boundary_type === 'official_boundaries' ? t('ward') : t('zone')}</h3>
           <div className="dec-note" style={{ marginBottom: 8 }}>{data.zones}</div>
           <div style={{ height: 320 }}>
             <ResponsiveContainer>
@@ -76,7 +80,7 @@ export default function RiskView({ city, cityInfo }) {
             <h3>{chosen.ward_name} — #{chosen.rank} {t('of')} {data.n_wards}</h3>
             <div className="stat-row">
               <div className="stat"><div className="label">{t('risk')}</div><div className="value">{chosen.risk_score}</div></div>
-              <div className="stat"><div className="label">{t('avg_temp')}</div><div className="value">{chosen.lst_mean}°C</div></div>
+              <div className="stat"><div className="label">{t('avg_temp')}</div><div className="value">{chosen.lst_mean.toFixed(1)}°C</div></div>
               <div className="stat"><div className="label">{t('people')}</div><div className="value">{chosen.population.toLocaleString()}</div></div>
             </div>
             {['hazard', 'exposure', 'vulnerability'].map((k) => (
@@ -94,13 +98,13 @@ export default function RiskView({ city, cityInfo }) {
 
       <div className="glass-panel dec-card" style={{ marginTop: 20 }}>
         <table className="dec-table">
-          <thead><tr><th>{t('rank')}</th><th>{t('ward')}</th><th>{t('risk')}</th><th>{t('heat')}</th><th>{t('people')}</th><th>{t('vulnerability')}</th></tr></thead>
+          <thead><tr><th>{t('rank')}</th><th>{data.method.boundary_type === 'official_boundaries' ? t('ward') : t('zone')}</th><th>{t('risk')}</th><th>{t('heat')}</th><th>{t('people')}</th><th>{t('vulnerability')}</th></tr></thead>
           <tbody>
             {wards.slice(0, 25).map((w) => (
               <tr key={w.ward_id} className={`click${w.ward_id === sel ? ' sel' : ''}`} onClick={() => setSel(w.ward_id)}>
                 <td>{w.rank}</td><td>{w.ward_name}</td>
                 <td style={{ minWidth: 120 }}><div className="bar"><span style={{ width: `${w.risk_score}%` }} /></div></td>
-                <td>{w.lst_mean}°C</td><td>{w.population.toLocaleString()}</td><td>{Math.round(w.vulnerability * 100)}%</td>
+                <td>{w.lst_mean.toFixed(1)}°C</td><td>{w.population.toLocaleString()}</td><td>{Math.round(w.vulnerability * 100)}%</td>
               </tr>))}
           </tbody>
         </table>
