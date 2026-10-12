@@ -1,4 +1,4 @@
-![HeatRelief](docs/banner.svg)
+![HeatRelief](docs/banner.png)
 
 **Live Website:** [http://heatrelief-frontendbucket-kdopto0acjsr.s3-website-us-east-1.amazonaws.com/](http://heatrelief-frontendbucket-kdopto0acjsr.s3-website-us-east-1.amazonaws.com/)  
 **Interactive Blog Post:** [http://heatrelief-blog-blogbucket-vxqiftyjihko.s3-website-us-east-1.amazonaws.com/](http://heatrelief-blog-blogbucket-vxqiftyjihko.s3-website-us-east-1.amazonaws.com/)
