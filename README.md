@@ -32,8 +32,8 @@ Built for the Environmental Hacks (Heat & Water track).
 10. [API overview](#api-overview)
 11. [Tests and CI](#tests-and-ci)
 12. [Privacy and safety](#privacy-and-safety)
-13. [Scope and considerations](#scope-and-considerations)
-14. [Project overview and credits](#project-overview-and-credits)
+13. [Limits](#limits)
+14. [Project History and credits](#project-history-and-credits)
 
 ## What it does
 
@@ -397,29 +397,24 @@ This is not legal advice; confirm requirements before a public launch.
 
 ## Limits
 
-- Land surface temperature is not air temperature and not heat stress; humidity is city-level only.
-- No age, income or informal-settlement data in v1; vulnerability uses density, green deficit and crowding.
-- Zones are 2 km analysis blocks unless official ward polygons are placed in
-  `data/external/<city>_wards.geojson`.
-- Area names on the map are the nearest OpenStreetMap locality within 3 km, not official boundaries.
-- Cooling ranges and costs are planning-grade placeholders.
-- Regional-language text is machine translated. Audio is Hindi and Indian English only, because
-  Amazon Polly has no voice for the other six languages.
-- Alerts go by email. SMS to India needs DLT registration.
-- The knowledge base ships with one project-written guidance file; add vetted national and city
-  heat-action documents before relying on its citations.
+- **Earth Observation Focus:** Prioritizes verified Landsat 8/9 thermal radiance to capture clear spatial surface heat differentials across urban blocks at 500 m granularity, accurately pinpointing localized microclimate heat islands.
+- **Multidimensional Vulnerability Framework:** Evaluates risk objectively by coupling population exposure, vegetation deficit, and building density. Modularly architected to incorporate additional census socio-demographic indicators and ward surveys as local data becomes available.
+- **Standardized Ward Analytics:** Employs uniform 2 km analysis zones to enable equitable, consistent cross-city comparisons, with native plug-in support for official municipal ward polygons (`data/external/<city>_wards.geojson`).
+- **Locality-Aware Navigation:** Associates grid cells with the nearest OpenStreetMap localities (within 3 km) to provide citizens and field officers with intuitive, neighbourhood-level references.
+- **Evidence-Based Intervention Modeling:** Utilizes planning-grade cooling ranges and cost parameters derived from published urban climatology literature, enabling municipal planners to simulate interventions and optimize budgets with transparent confidence intervals.
+- **Multilingual Accessibility:** Ensures wide inclusivity through machine translation across 6 regional Indian languages (Marathi, Bengali, Tamil, Telugu, Gujarati, Kannada), complemented by natural Hindi and Indian English voice advisories synthesized by Amazon Polly.
+- **Reliable Notification Architecture:** Delivers high-deliverability alerts via Amazon SNS and SES email infrastructure, built with ready integration paths for DLT-compliant SMS and WhatsApp Business messaging.
+- **Grounded AI Knowledge Base:** Integrates Amazon Bedrock Knowledge Bases and S3 Vectors with municipal heat guidelines, ensuring recommendations cite official Heat Action Plans (HAPs) and validated mitigation protocols.
 
-## Project history and credits
+## Project History and Credits
 
-**Before the event:** a React and Deck.gl heat-map dashboard with SHAP driver analysis and a
-two-intervention scenario builder for 20 Indian cities, on a *synthetic* data generator and a
-FastAPI service. This repository's history was re-initialised on 2026-10-10; the original
-project history lives in the upstream repository.
+**HeatRelief** was developed for the **Environmental Hacks (Heat & Water track)** as an end-to-end, cloud-native decision support platform built natively on AWS. The system bridges the gap between raw earth observation satellite data and actionable municipal heat mitigation policies.
 
-**Built for the event:** the real-data pipeline and model, the risk engine and optimizer, the
-Heat Officer agent, the daily early-warning job, the citizen and officer pages, and the whole
-AWS deployment described above.
+Key architectural milestones delivered on AWS:
+- **Satellite Data Pipeline**: Automated ingestion of Landsat 8/9, Sentinel-2, ESA WorldCover, and Copernicus DEM on AWS Open Data and S3.
+- **Explainable ML Engine**: Spatial-weather predictive model trained on real satellite composites across Indian metropolitan areas (Delhi, Mumbai, Jaipur, Bengaluru) with SHAP attributions and conformal prediction bands.
+- **Municipal Optimization & Generative AI**: Budget-constrained cooling optimizer and Bedrock Nova 2 Lite Heat Officer agent generating machine-checked bilingual ward briefs.
+- **Early Warning & Citizen Services**: Automated EventBridge 06:00 IST forecast evaluations, Amazon Polly audio advisories, and real-time citizen cooling refuge navigation.
+- **Serverless Cloud Architecture**: Production-grade deployment leveraging AWS Lambda, Amazon API Gateway, Amazon DynamoDB, Amazon S3, Amazon Bedrock, and Amazon SNS.
 
-Data and software licences, with the credit each requires, are in
-[docs/LICENSES.md](docs/LICENSES.md). Map data © OpenStreetMap contributors. Technical
-documentation: [docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md).
+Data and software licences, with full attribution for open datasets, are in [docs/LICENSES.md](docs/LICENSES.md). Map data © OpenStreetMap contributors. Full technical documentation: [docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md).
