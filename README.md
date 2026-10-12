@@ -395,26 +395,31 @@ Node 20 and lints both templates on every push and pull request.
 India's Digital Personal Data Protection Act, 2023 applies to the email addresses collected.
 This is not legal advice; confirm requirements before a public launch.
 
-## Scope and considerations
+## Limits
 
-- **Surface Heat & Microclimate Analysis**: Measures high-resolution Landsat 8/9 thermal radiance to capture clear spatial heat differentials across urban blocks at 500 m granularity, pinpointing localized heat islands.
-- **Multidimensional Vulnerability Framework**: Evaluates risk by coupling population exposure, green deficit, and structural density. The modular architecture is designed to integrate census socio-demographic indicators and ward-level surveys as datasets evolve.
-- **Standardized Ward Analytics**: Employs uniform 2 km analysis zones to provide fair, comparable cross-city prioritization, with native support for official municipal ward GeoJSON polygons (`data/external/<city>_wards.geojson`).
-- **Locality-Aware Navigation**: Maps cells to the nearest OpenStreetMap localities within 3 km to provide citizens and officers with intuitive neighbourhood references.
-- **Evidence-Based Cooling Interventions**: Uses planning-grade cooling estimates and cost models derived from published urban climatology literature, enabling officials to simulate scenarios and budget allocations with quantifiable confidence intervals.
-- **Multilingual Accessibility**: Empowers diverse communities with automated translations across 6 regional Indian languages (Marathi, Bengali, Tamil, Telugu, Gujarati, Kannada) alongside natural Hindi and Indian English audio advisories synthesized by Amazon Polly.
-- **High-Deliverability Alerting**: Powered by Amazon SNS and SES for reliable email delivery, architected for seamless expansion to DLT-compliant SMS and WhatsApp Business messaging.
-- **Grounded AI Knowledge Base**: Integrates Amazon Bedrock Knowledge Bases and S3 Vectors with municipal heat guidelines, ensuring recommendations cite official Heat Action Plans and validated mitigation protocols.
+- Land surface temperature is not air temperature and not heat stress; humidity is city-level only.
+- No age, income or informal-settlement data in v1; vulnerability uses density, green deficit and crowding.
+- Zones are 2 km analysis blocks unless official ward polygons are placed in
+  `data/external/<city>_wards.geojson`.
+- Area names on the map are the nearest OpenStreetMap locality within 3 km, not official boundaries.
+- Cooling ranges and costs are planning-grade placeholders.
+- Regional-language text is machine translated. Audio is Hindi and Indian English only, because
+  Amazon Polly has no voice for the other six languages.
+- Alerts go by email. SMS to India needs DLT registration.
+- The knowledge base ships with one project-written guidance file; add vetted national and city
+  heat-action documents before relying on its citations.
 
-## Project overview and credits
+## Project history and credits
 
-**HeatRelief** was developed for the **Environmental Hacks (Heat & Water track)** as an end-to-end, cloud-native decision support platform on AWS. It bridges the gap between raw earth observation satellite data and actionable municipal heat mitigation policies.
+**Before the event:** a React and Deck.gl heat-map dashboard with SHAP driver analysis and a
+two-intervention scenario builder for 20 Indian cities, on a *synthetic* data generator and a
+FastAPI service. This repository's history was re-initialised on 2026-10-10; the original
+project history lives in the upstream repository.
 
-Key achievements of the platform:
-- **Comprehensive Satellite Data Pipeline**: Automated multi-spectral ingestion of Landsat 8/9, Sentinel-2, ESA WorldCover, and Copernicus DEM on AWS.
-- **Predictive ML & Decision Modeling**: Spatial-weather predictive modeling with SHAP explainability and conformal uncertainty quantification.
-- **Actionable Optimization & Generative AI**: Budget-constrained cooling optimizer and Bedrock Nova 2 Lite Heat Officer agent generating bilingual, verified briefs.
-- **Citizen Protection & Early Warning**: Automated EventBridge 06:00 IST forecast evaluations, spoken audio bulletins, and interactive cooling refuge navigation.
-- **Serverless Cloud Architecture**: Production-grade deployment leveraging AWS Lambda, Amazon API Gateway, Amazon DynamoDB, Amazon S3, Amazon Bedrock, and Amazon SNS.
+**Built for the event:** the real-data pipeline and model, the risk engine and optimizer, the
+Heat Officer agent, the daily early-warning job, the citizen and officer pages, and the whole
+AWS deployment described above.
 
-Data and software licences, with full attribution for open datasets, are in [docs/LICENSES.md](docs/LICENSES.md). Map data © OpenStreetMap contributors. Detailed architectural documentation: [docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md).
+Data and software licences, with the credit each requires, are in
+[docs/LICENSES.md](docs/LICENSES.md). Map data © OpenStreetMap contributors. Technical
+documentation: [docs/PROJECT_DOCUMENTATION.md](docs/PROJECT_DOCUMENTATION.md).
