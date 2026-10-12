@@ -8,7 +8,7 @@ In Delhi's hottest 500-metre blocks the ground passes **52 °C** before the mons
 
 We built **HeatRelief** to close that gap. Satellite surface temperature goes in. Out come a ranked list of wards, a costed cooling plan and a ward brief in Hindi and English. This post covers the problem, the stack, where AWS fits and what fought back.
 
-**Interactive version:** [link to the deployed blog] · **Code:** https://github.com/abhaysingh81/Urban_Heat_Mitigation_AWS · **Demo video:** [YouTube link]
+**Interactive version:** [http://heatrelief-blog-blogbucket-vxqiftyjihko.s3-website-us-east-1.amazonaws.com/](http://heatrelief-blog-blogbucket-vxqiftyjihko.s3-website-us-east-1.amazonaws.com/) · **Code:** https://github.com/abhaysingh81/Urban_Heat_Mitigation_AWS · **Demo video:** [YouTube link]
 
 ## The problem: a heat map is not a decision
 
